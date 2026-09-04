@@ -1,0 +1,48 @@
+# Prüfungen bei jedem Push auf main und bei jedem Pull Request.
+#
+# Kein Deployment-Schritt: SFR-02 verlangt player.nodesignal.space per CNAME
+# auf GitHub Pages. Solange die Origin nicht eingerichtet ist, prüft die Action
+# nur — ein Deploy auf eine unentschiedene Domain hätte dieselbe Folge wie ein
+# späterer Domainwechsel.
+name: Pruefungen
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  pruefungen:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      # Actions auf Commit-SHA gepinnt: ein bewegliches Tag laesst sich
+      # umhaengen, ein SHA nicht.
+      - name: Quelltext holen
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Node einrichten
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: npm
+      - name: Abhaengigkeiten installieren
+        run: npm ci
+      # Der Guardrails-Scanner ist ein Modul, kein Skript: er laeuft ueber die
+      # Tests in test/guardrails/. Eigener Schritt, damit ein Verstoss gegen
+      # SNR-03 oder SNR-06 sofort sichtbar ist.
+      - name: Guardrails (SNR-01 bis SNR-09)
+        run: npx vitest run test/guardrails/
+      - name: Tests
+        run: npm test
+      - name: Build
+        run: npm run build
+      - name: Lint
+        run: npm run lint

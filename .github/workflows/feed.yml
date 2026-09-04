@@ -1,0 +1,33 @@
+# SFR-08: Ein täglicher Lauf holt den Feed, baut neu und veröffentlicht.
+#
+# Der Snapshot löst den CORS-Fall vollständig: Zur Bauzeit gibt es keine
+# Same-Origin-Policy. Solange FEED_URL ein Platzhalter ist, erzeugt das
+# Werkzeug einen leeren Snapshot und der Lauf bleibt grün.
+#
+# Der Veröffentlichungsschritt fehlt bewusst, bis die Origin steht (SFR-02).
+name: Feed-Snapshot
+
+on:
+  schedule:
+    - cron: '17 4 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Quelltext holen
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Node einrichten
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: npm
+      - name: Abhaengigkeiten installieren
+        run: npm ci
+      - name: Feed holen und bauen
+        run: npm run build
