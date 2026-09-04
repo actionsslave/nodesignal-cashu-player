@@ -43,6 +43,12 @@ export interface SourceSectionProps {
   onChangeFloat: () => void;
   /** SFR-20: quellenübergreifend, überlebt einen Quellenwechsel (SFR-31). */
   sessionSent: number;
+  /**
+   * NIP-65: Wohin Entnahme und Rückgabe geschrieben werden. Steht nicht im
+   * Entwurf, gehört aber sichtbar dorthin: Wer sein Geld dieser Seite
+   * anvertraut, soll lesen können, auf welche Relays es zurückgeht.
+   */
+  walletRelays?: string[];
   nip60BalanceByMint: Record<string, number>;
   localBalanceByMint: Record<string, number>;
   storageMode?: string;
@@ -91,6 +97,7 @@ export function SourceSection({
   floatAmount,
   onChangeFloat,
   sessionSent,
+  walletRelays,
   nip60BalanceByMint,
   localBalanceByMint,
   storageMode,
@@ -179,6 +186,12 @@ export function SourceSection({
               Streaming und Boosts laufen gegen den Float. Auf die Relays wird zweimal je Sitzung
               geschrieben: bei der Entnahme und bei der Rückgabe.
             </p>
+            {walletRelays && walletRelays.length > 0 && (
+              <p class="source-note">
+                Geschrieben wird auf {walletRelays.map((url) => url.replace(/^wss:\/\//, '')).join(' · ')}
+                {' '}— deine Relayliste aus kind:10002.
+              </p>
+            )}
           </>
         ) : (
           <div class="source-actions">

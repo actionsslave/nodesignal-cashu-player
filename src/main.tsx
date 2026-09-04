@@ -48,6 +48,7 @@ import {
   isStreamingRateConfirmed,
 } from './payments/streaming-settings.js';
 import { readNip60Wallet, type Nip60Snapshot } from './nip60/read.js';
+import { resolveWalletRelays } from './nip60/relays.js';
 import { foreignWalletEventsSince } from './nip60/watch.js';
 import { FloatService } from './nip60/float-service.js';
 import {
@@ -121,6 +122,12 @@ function App() {
   const [rate, setRate] = useState(0);
   const [rateConfirmed, setRateConfirmed] = useState(false);
   const [historyEvents, setHistoryEvents] = useState(false);
+  /**
+   * NIP-65: Die Wallet-Events liegen auf den Relays des Nutzers. Bis die Liste
+   * da ist, wird nicht gelesen und erst recht nicht geschrieben — sonst ginge
+   * die Rueckgabe an Relays, die sein eigener Client nicht liest.
+   */
+  const [walletRelays, setWalletRelays] = useState<string[] | undefined>(undefined);
 
   /** SFR-20, SFR-31: quellenübergreifend, überlebt einen Quellenwechsel. */
   const [sessionSent, setSessionSent] = useState(0);
@@ -137,16 +144,18 @@ function App() {
   );
 
   const floatService = useMemo(() => {
-    if (!session) return undefined;
+    // Ohne die Relayliste des Nutzers kein Float: Eine Entnahme, deren
+    // Rueckgabe auf fremden Relays landet, ist kein akzeptables Risiko.
+    if (!session || !walletRelays) return undefined;
     return new FloatService({
       pubkeyHex: session.pubkeyHex,
-      relays: [...DEMO_RELAYS],
+      relays: walletRelays,
       nostr,
       mint: mintGateway,
       encrypt: nip44Encrypt,
       signEvent,
     });
-  }, [session, nostr, mintGateway]);
+  }, [session, walletRelays, nostr, mintGateway]);
 
   const refreshWallet = useCallback(async () => {
     const db = await openDatabase();
@@ -215,13 +224,31 @@ function App() {
     };
   }, [nostr]);
 
+  useEffect(() => {
+    if (!session) {
+      setWalletRelays(undefined);
+      return;
+    }
+    let cancelled = false;
+    void resolveWalletRelays({
+      pubkeyHex: session.pubkeyHex,
+      gateway: nostr,
+      fallback: DEMO_RELAYS,
+    }).then((relays) => {
+      if (!cancelled) setWalletRelays(relays);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [session, nostr]);
+
   // SFR-13, SNR-01: die NIP-60-Wallet wird gelesen, nie angelegt.
   useEffect(() => {
-    if (!session || !signer.nip44) return;
+    if (!session || !signer.nip44 || !walletRelays) return;
     let cancelled = false;
     void readNip60Wallet({
       pubkeyHex: session.pubkeyHex,
-      relays: [...DEMO_RELAYS],
+      relays: walletRelays,
       gateway: nostr,
       decrypt: nip44Decrypt,
     })
@@ -232,7 +259,7 @@ function App() {
     return () => {
       cancelled = true;
     };
-  }, [session, signer.nip44, nostr]);
+  }, [session, signer.nip44, walletRelays, nostr]);
 
   const sources = useMemo(
     () =>
@@ -350,7 +377,7 @@ function App() {
     try {
       const fremde = await foreignWalletEventsSince({
         pubkeyHex: session.pubkeyHex,
-        relays: [...DEMO_RELAYS],
+        relays: walletRelays ?? [...DEMO_RELAYS],
         gateway: nostr,
         sinceMs: offen.openedAt,
         ownEventIds: offen.ownEventIds ?? [],
@@ -362,7 +389,7 @@ function App() {
     }
     // Der Float selbst haengt an einer Ref: Ohne das liefe die Abfrage bei
     // jedem Streaming-Tick erneut, weil refreshWallet den Datensatz neu setzt.
-  }, [session, openedAt, nostr]);
+  }, [session, openedAt, walletRelays, nostr]);
 
   useEffect(() => {
     void checkForeignEvents();
@@ -580,6 +607,7 @@ function App() {
           floatAmount={floatAmount}
           onChangeFloat={() => document.getElementById('float')?.focus()}
           sessionSent={sessionSent}
+          walletRelays={walletRelays}
           nip60BalanceByMint={nip60?.balanceByMint ?? {}}
           localBalanceByMint={localBalance}
           storageMode={storageMode}
