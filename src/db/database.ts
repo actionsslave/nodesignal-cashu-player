@@ -159,6 +159,13 @@ export interface FloatStateRecord {
   mintUrl: string;
   /** Event-IDs der kind:7375, die bei der Entnahme verbraucht wurden. */
   consumedEventIds: string[];
+  /**
+   * SOQ-03: Event-IDs, die diese App bei der Entnahme selbst geschrieben hat.
+   * Ohne sie hielte die Beobachtung das eigene Wechselgeld-Event fuer den
+   * Schreibzugriff eines fremden Clients. Optional, weil ein Datensatz aus
+   * einer Fassung davor sie nicht traegt.
+   */
+  ownEventIds?: string[];
   openedAt: number;
 }
 

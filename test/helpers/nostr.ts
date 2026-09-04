@@ -55,7 +55,12 @@ export function fakeNostr(options: FakeNostrOptions = {}): FakeNostrGateway {
     },
     async fetchEvents(_relays, filter) {
       fetches.push(filter);
-      return options.events ?? (options.event ? [options.event] : []);
+      const alle = options.events ?? (options.event ? [options.event] : []);
+      // `since` wird hier wirklich angewandt: Ein Fake, der den Filter
+      // ignoriert, wuerde jeden Test darueber gruen faerben.
+      return filter.since === undefined
+        ? alle
+        : alle.filter((event) => event.created_at >= filter.since!);
     },
     async connect(relays) {
       if (options.connectFails) throw new Error('Kein Relay erreichbar');

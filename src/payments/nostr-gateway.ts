@@ -10,6 +10,12 @@ export interface EventFilter {
   authors: string[];
   /** Nur fuer kind:7375 noetig: NIP-60 legt beliebig viele davon an. */
   limit?: number;
+  /**
+   * Nur Events ab diesem Zeitpunkt, in Sekunden seit Epoch — so zaehlt nostr.
+   * Gebraucht fuer SOQ-03: Hat ein anderer Client die Wallet angefasst,
+   * seit der Float offen ist?
+   */
+  since?: number;
 }
 
 export interface PublishResult {

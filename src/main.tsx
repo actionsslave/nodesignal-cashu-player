@@ -48,6 +48,7 @@ import {
   isStreamingRateConfirmed,
 } from './payments/streaming-settings.js';
 import { readNip60Wallet, type Nip60Snapshot } from './nip60/read.js';
+import { foreignWalletEventsSince } from './nip60/watch.js';
 import { FloatService } from './nip60/float-service.js';
 import {
   confirmFloatAmount,
@@ -114,6 +115,9 @@ function App() {
   const [floatConfirmed, setFloatConfirmed] = useState(false);
   /** SOQ-03: Rest einer abgebrochenen Sitzung, beim Laden angeboten. */
   const [leftover, setLeftover] = useState<FloatStateRecord | undefined>(undefined);
+  const [floatState, setFloatState] = useState<FloatStateRecord | undefined>(undefined);
+  /** SOQ-03: fremde kind:7375 seit der Entnahme. undefined heisst: nicht gefragt. */
+  const [foreignEvents, setForeignEvents] = useState<number | undefined>(undefined);
   const [rate, setRate] = useState(0);
   const [rateConfirmed, setRateConfirmed] = useState(false);
   const [historyEvents, setHistoryEvents] = useState(false);
@@ -146,10 +150,11 @@ function App() {
 
   const refreshWallet = useCallback(async () => {
     const db = await openDatabase();
-    const [proofs, mode, eintraege] = await Promise.all([
+    const [proofs, mode, eintraege, offen] = await Promise.all([
       db.getAll('proofs'),
       readStorageMode(),
       listHistory(),
+      db.get('floatState', 'current'),
     ]);
     const lokal: Record<string, number> = {};
     for (const row of mintOverview(proofs, 'local')) lokal[row.url] = row.balance;
@@ -159,6 +164,7 @@ function App() {
     setFloatByMint(float);
     setStorageMode(mode);
     setHistory(eintraege);
+    setFloatState(offen);
   }, []);
 
   const floatRemaining = useMemo(
@@ -325,6 +331,48 @@ function App() {
     };
   }, [floatService, giveBackFloat]);
 
+  /**
+   * SOQ-03: Solange ein Float offen ist, wird gefragt, ob ein anderer Client
+   * an derselben Wallet geschrieben hat. Nicht im Takt — das waere Geplapper
+   * gegen die Relays —, sondern nach der Entnahme und immer dann, wenn der Tab
+   * wieder in den Vordergrund kommt.
+   */
+  const floatRef = useRef(floatState);
+  floatRef.current = floatState;
+  const openedAt = floatState?.openedAt;
+
+  const checkForeignEvents = useCallback(async () => {
+    const offen = floatRef.current;
+    if (!session || !offen) {
+      setForeignEvents(undefined);
+      return;
+    }
+    try {
+      const fremde = await foreignWalletEventsSince({
+        pubkeyHex: session.pubkeyHex,
+        relays: [...DEMO_RELAYS],
+        gateway: nostr,
+        sinceMs: offen.openedAt,
+        ownEventIds: offen.ownEventIds ?? [],
+      });
+      setForeignEvents(fremde.length);
+    } catch {
+      // Nicht erreichbar heisst nicht „nichts passiert" — dann lieber schweigen.
+      setForeignEvents(undefined);
+    }
+    // Der Float selbst haengt an einer Ref: Ohne das liefe die Abfrage bei
+    // jedem Streaming-Tick erneut, weil refreshWallet den Datensatz neu setzt.
+  }, [session, openedAt, nostr]);
+
+  useEffect(() => {
+    void checkForeignEvents();
+    const beiSicht = () => {
+      if (document.visibilityState === 'visible') void checkForeignEvents();
+    };
+    document.addEventListener('visibilitychange', beiSicht);
+    return () => document.removeEventListener('visibilitychange', beiSicht);
+  }, [checkForeignEvents]);
+
   // ── Zahlungen ───────────────────────────────────────────────────────────
 
   const walletFuerQuelle = activeSource === 'nip60' ? floatWallet : localWallet;
@@ -473,14 +521,14 @@ function App() {
         floatRemaining={activeSource === 'nip60' ? floatRemaining : undefined}
         rate={rate}
         sourceNote={activeSource === 'local' ? 'aus der lokalen Wallet' : 'aus dem Float'}
-        /*
-         * Der Entwurf sieht hier „Keine Wallet-Events seit der Entnahme" vor.
-         * Die App fragt die Relays nach der Entnahme nicht erneut, koennte den
-         * Satz also nicht belegen — und ein unbelegter Satz ueber fremde
-         * Schreibzugriffe waere schlimmer als keiner. Bleibt weg, bis die
-         * Abfrage dasteht.
-         */
-        floatNote={undefined}
+        floatNote={
+          // SOQ-03: nur sagen, was wirklich abgefragt wurde.
+          floatState === undefined || foreignEvents === undefined
+            ? undefined
+            : foreignEvents === 0
+              ? 'Keine Wallet-Events seit der Entnahme'
+              : `${foreignEvents} fremde Wallet-Events seit der Entnahme`
+        }
         onWriteBackFloat={
           floatRemaining > 0 && activeSource === 'nip60' ? () => void giveBackFloat() : undefined
         }

@@ -72,6 +72,17 @@ describe('FloatService', () => {
     expect(kinds).toContain(5);
   });
 
+  it('SOQ-03: merkt sich die selbst geschriebenen Event-IDs', async () => {
+    const { service } = makeService();
+    await service.take({ amount: 500, mintUrl: MINT, events: [tokenEvent('ev-1', [1000])] });
+
+    const db = await openDatabase();
+    const state = await db.get('floatState', 'current');
+    // Ohne diese Liste hielte die App ihr eigenes Wechselgeld-Event fuer den
+    // Schreibzugriff eines fremden Clients.
+    expect(state?.ownEventIds).toContain('id-7375');
+  });
+
   it('SNR-02: löscht nur die Events, die für diese Entnahme verbraucht wurden', async () => {
     const { service, nostr } = makeService();
     await service.take({

@@ -103,11 +103,12 @@ export class FloatService {
 
     const { send, keep } = await this.deps.mint.send(mintUrl, amount, plan.proofs);
 
+    const ownEventIds: string[] = [];
     if (keep.length > 0) {
-      await this.publishTokenEvent(mintUrl, keep, plan.consumedEventIds);
+      ownEventIds.push(await this.publishTokenEvent(mintUrl, keep, plan.consumedEventIds));
     }
     if (plan.consumedEventIds.length > 0) {
-      await this.publishDeletion(plan.consumedEventIds);
+      ownEventIds.push(await this.publishDeletion(plan.consumedEventIds));
     }
 
     await this.wallet.addProofs(mintUrl, send);
@@ -118,6 +119,7 @@ export class FloatService {
       amount,
       mintUrl,
       consumedEventIds: plan.consumedEventIds,
+      ownEventIds,
       openedAt: Date.now(),
     });
 
@@ -177,11 +179,12 @@ export class FloatService {
     return { amount: bundle.amount, mintUrl: state.mintUrl };
   }
 
+  /** Liefert die ID des geschriebenen Events — SOQ-03 braucht sie. */
   private async publishTokenEvent(
     mintUrl: string,
     proofs: StoredProof[],
     del: string[],
-  ): Promise<void> {
+  ): Promise<string> {
     const content: TokenEventContent = { mint: mintUrl, unit: WALLET_UNIT, proofs, del };
     const signed = await this.deps.signEvent({
       kind: TOKEN_KIND,
@@ -190,10 +193,11 @@ export class FloatService {
       content: await this.deps.encrypt(this.deps.pubkeyHex, JSON.stringify(content)),
     });
     await this.deps.nostr.publish(this.deps.relays, signed);
+    return signed.id;
   }
 
   /** SNR-02: nur die IDs aus dem Plan, nie eine Auswahl aus einer Abfrage. */
-  private async publishDeletion(eventIds: string[]): Promise<void> {
+  private async publishDeletion(eventIds: string[]): Promise<string> {
     const signed = await this.deps.signEvent({
       kind: 5,
       created_at: Math.floor(Date.now() / 1000),
@@ -201,5 +205,6 @@ export class FloatService {
       content: '',
     });
     await this.deps.nostr.publish(this.deps.relays, signed);
+    return signed.id;
   }
 }
