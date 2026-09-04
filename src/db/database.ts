@@ -82,6 +82,8 @@ export interface HistoryRecord {
   kind: 'streaming' | 'boost' | 'import' | 'export';
   feedTitle?: string;
   episodeTitle?: string;
+  /** SFR-32: aus welcher Quelle die Zahlung finanziert wurde. */
+  source?: 'nip60' | 'local';
   /** Grund bei status === 'fehlgeschlagen'. */
   error?: string;
 }

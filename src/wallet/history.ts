@@ -13,6 +13,8 @@ export interface NewPayment {
   status: PaymentStatus;
   feedTitle?: string;
   episodeTitle?: string;
+  /** SFR-32: aus welcher Quelle finanziert. */
+  source?: HistoryRecord['source'];
   /** Nur für Tests und Nacherfassung; sonst jetzt. */
   at?: number;
 }
@@ -28,6 +30,7 @@ export async function recordPayment(payment: NewPayment): Promise<string> {
     status: payment.status,
     feedTitle: payment.feedTitle,
     episodeTitle: payment.episodeTitle,
+    source: payment.source,
     at: payment.at ?? Date.now(),
   });
   return id;

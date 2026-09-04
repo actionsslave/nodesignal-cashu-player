@@ -39,9 +39,23 @@ Wallet-Events. Er ist nicht verloren, aber vorübergehend nur lokal sichtbar.
 | NIP-60 auswerten: `kind:17375`, `kind:7375`, Guthaben je Mint (SFR-13 bis SFR-15) | gebaut |
 | Float planen: Entnahme, Rückgabe, Grenzen (SFR-16 bis SFR-18, SFR-20) | gebaut |
 | Quellenwahl und Gründe je Quelle (SFR-28 bis SFR-30) | gebaut |
+| Laufzeit-Abruf mit Rückfall auf den Build-Stand (SFR-09) | gebaut |
 | Lokale Wallet, Nutzaps, Player-Kern | aus `cashu-player` übernommen |
-| Oberfläche (SFR-05 bis SFR-07) | **offen — wartet auf das Design-Handoff** |
+| Oberfläche (SFR-05 bis SFR-07, SFR-20, SFR-28 bis SFR-30) | gebaut, **schmucklos — wartet auf das Design-Handoff** |
 | Deployment auf `player.nodesignal.space` (SFR-02) | **offen — Origin einrichten** |
+
+## Noch nicht verdrahtet
+
+Die Oberfläche steht, aber zwei Stränge hängen noch nicht daran:
+
+- **`kind:17375` und `kind:7375` lesen.** `src/nip60/wallet-event.ts` wertet
+  beide aus und ist getestet; das Holen von den Relays und das Entschlüsseln
+  über die Extension fehlen. Bis dahin meldet die NIP-60-Quelle
+  „keine Wallet gefunden" — richtig im Ergebnis, aber aus dem falschen Grund.
+- **Float-Entnahme und -Rückgabe.** `src/nip60/float.ts` plant beide und ist
+  getestet; das Ausführen verlangt einen Mint-Swap, ein `kind:5` und ein neues
+  `kind:7375`. Das ist der Schritt, der echtes Geld bewegt, und er gehört gegen
+  einen echten Mint geprüft, nicht blind geschrieben.
 
 ## Vor dem ersten Deployment
 
