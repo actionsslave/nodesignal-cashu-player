@@ -1,5 +1,63 @@
 {
   "title": "Nodesignal",
-  "episodes": [],
-  "fetchedAt": "2026-09-04T15:08:15.794Z"
+  "imageUrl": "https://nodesignal.space/wp-content/uploads/2021/12/20178404-1639497002094-bb43562b212bb.jpg",
+  "episodes": [
+    {
+      "guid": "https://nodesignal.space/E289/",
+      "title": "Nodesignal-Talk – E289 – Keine Angst",
+      "description": "In der heutigen Folge sprechen actionslave, Chris⚡SHA256, Thorsten ⚡️ über die aktuelle Bewusstseinskrise in Bitcoin: Coldcard-Desaster, BTCPay-Server-Exploit, BIP-110, den eCash-Fork, Lightning-FUD, Preisdruck und die Haltefrist. Punkt für Punkt gehen wir…",
+      "enclosureUrl": "https://serve.podhome.fm/episode/24263e26-0aa8-432a-467a-08dc1370a35c/639227387303017985d284b396-7cd6-4e5d-b3ff-a369c09e264d.mp3",
+      "publishedAt": 1787308190000
+    },
+    {
+      "guid": "https://nodesignal.space/E288/",
+      "title": "Nodesignal-Spezial – E288 –  Karsten erklärt: Channel Factories",
+      "description": "In der heutigen Folge spricht Karsten über Channel Factories – eine vorgeschlagene Architektur zur Skalierung des Lightning Networks, bei der mehrere Parteien ihre Gelder in einer einzigen On-Chain-Multisig-Transaktion bündeln und…",
+      "enclosureUrl": "https://serve.podhome.fm/episode/24263e26-0aa8-432a-467a-08dc1370a35c/639220556205118241366a0f4c-e38d-4286-9a51-d02f35d61072.mp3",
+      "publishedAt": 1786737600000
+    },
+    {
+      "guid": "https://nodesignal.space/E204/",
+      "title": "Reupload: Nodesignal-Talk – E204 – Hey Calso, why privacy matters!",
+      "description": "In dem heutigen Reupload geht Chris der Frage nach “Why privacy matters?”Calso wollte es doch in Folge 200 wissen Von und mit: – Calso – Chris⚡SHA256 – Thorsten⚡(Cutting) Produziert und…",
+      "enclosureUrl": "https://serve.podhome.fm/episode/24263e26-0aa8-432a-467a-08dc1370a35c/639216397692877161bbe3e28d-2782-4955-9141-4cfc2bb49b1f.mp3",
+      "publishedAt": 1786132800000
+    },
+    {
+      "guid": "https://nodesignal.space/E18/",
+      "title": "Reupload: Nodesignal-Talk – E18 – Bitcoin dezentral handeln mit Bisq",
+      "description": "Im heutigen Reupload thematisierten wir mit Emzy und Systemling die dezentrale Börse Bisq. Emzy lässt Nodes für das Bisq-Network laufen und Niklas ist ein begeisterter Nutzer der Software. Unter anderem…",
+      "enclosureUrl": "https://serve.podhome.fm/episode/24263e26-0aa8-432a-467a-08dc1370a35c/63920750270672514874e43818-d2bf-43ec-a591-c2e6c88c4293.mp3",
+      "publishedAt": 1785528000000
+    },
+    {
+      "guid": "https://nodesignal.space/E141/",
+      "title": "REUPLOAD Nodesignal-Talk – E141 – Security Model",
+      "description": "In der heutigen Folge (Re-Upload!) sprechen Chris und Jan-Paul über das Security Model von Bitcoin.Mit der kontinuierlichen Verkleinerung der Block Subsidy wird die Absicherung der Bitcoin Time-Chain zukünftig maßgeblich über…",
+      "enclosureUrl": "https://serve.podhome.fm/episode/24263e26-0aa8-432a-467a-08dc1370a35c/6392049081098787960d053359-7935-4dc4-9661-6b3e78f5abfa.mp3",
+      "publishedAt": 1784923200000
+    },
+    {
+      "guid": "https://nodesignal.space/E248/",
+      "title": "Reupload: Nodesignal-Talk – E248 – Schrödingers Reichtum, mit Juniormind",
+      "description": "In der heutigen Folge (Reupload!) sprechen Jan-Paul und Chris mit Juniormind über seine Erfahrungen mit Banken, Börsen und der Polizei bei seinem Versuch, ohne KYC Sats zu stacken. Ein wilder…",
+      "enclosureUrl": "https://serve.podhome.fm/episode/24263e26-0aa8-432a-467a-08dc1370a35c/6391987184522570926d2a477e-7e86-4e7a-9d49-68a2cf79015e.mp3",
+      "publishedAt": 1784318400000
+    },
+    {
+      "guid": "https://nodesignal.space/E287/",
+      "title": "Nodesignal-Spezial – E287 – Volle Dröhnung Boosts",
+      "description": "In der heutigen Spezial-Folge sprechen Calso, Thorsten ⚡️ und zettizettler über die neuen Boosts der aktuellen Staffel bis zur Gegenwart. Wir gehen gemeinsam durch die eingegangenen Value4Value-Beiträge und lassen den…",
+      "enclosureUrl": "https://serve.podhome.fm/episode/24263e26-0aa8-432a-467a-08dc1370a35c/639190537502627529062d2730-a53d-4faf-8205-58778acc661d.mp3",
+      "publishedAt": 1783711200000
+    },
+    {
+      "guid": "https://nodesignal.space/E254/",
+      "title": "Reupload: Nodesignal-Techboost – E254 – Nerds unter sich: Highlights der btc++ lightning edition",
+      "description": "In der heutigen Folge (Re-Upload!) sprechen Jan-Paul und Calso mit Chistian Decker, Rene Pickhardt und Calle auf der btc++ Lightning Konferenz in Berlin über die aktuellen Themen, die die drei…",
+      "enclosureUrl": "https://serve.podhome.fm/episode/24263e26-0aa8-432a-467a-08dc1370a35c/639185803274134682c5fe570d-c088-4231-b9e9-3933b57ffe3av1.mp3",
+      "publishedAt": 1783108800000
+    }
+  ],
+  "fetchedAt": "2026-09-04T18:11:48.671Z"
 }

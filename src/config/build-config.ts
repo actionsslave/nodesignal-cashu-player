@@ -9,14 +9,18 @@
 export const PLACEHOLDER_MARKER = 'PLATZHALTER';
 
 /** SFR-04, SFR-08: Der Feed, aus dem der Build-Snapshot entsteht. */
-export const FEED_URL = `https://feed.${PLACEHOLDER_MARKER}.example/nodesignal.xml`;
+export const FEED_URL = 'https://nodesignal.space/rss';
 
 /**
  * SFR-04: Der Empfänger. Sein kind:10019 nennt Mints, Relays und P2PK-Pubkey.
  * SA-03 ist belegt: Am 02.09.2026 kam ein Nutzap bei Nodesignal an.
- * TODO: den echten npub eintragen.
+ *
+ * Der npub steht in den Shownotes des Feeds. Sein kind:10019 wurde am
+ * 04.09.2026 über die Relays gelesen und nennt drei Mints — macadamia,
+ * sovran.money und minibits/Bitcoin — sowie einen P2PK-Pubkey. Die Schnittmenge
+ * mit ALLOWED_MINTS ist damit nicht leer (SFR-15, SOQ-02).
  */
-export const RECIPIENT_NPUB = `npub1${PLACEHOLDER_MARKER.toLowerCase()}`;
+export const RECIPIENT_NPUB = 'npub1n0devk3h2l3rx6vmt24a3lz4hsxp7j8rn3x44jkx6daj7j8jzc0q2u02cy';
 
 /**
  * Erlaubte Mints (SFR-15, SFR-30, SOQ-02).

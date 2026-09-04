@@ -8,6 +8,8 @@ import type { SignedNostrEvent } from '../identity/nip07.js';
 export interface EventFilter {
   kinds: number[];
   authors: string[];
+  /** Nur fuer kind:7375 noetig: NIP-60 legt beliebig viele davon an. */
+  limit?: number;
 }
 
 export interface PublishResult {
@@ -18,6 +20,12 @@ export interface PublishResult {
 export interface NostrGateway {
   /** Jüngstes Event zu diesem Filter, oder undefined. */
   fetchEvent(relays: string[], filter: EventFilter): Promise<SignedNostrEvent | undefined>;
+  /**
+   * Alle Events zu diesem Filter. SFR-14 braucht das: Ein Nutzer hat beliebig
+   * viele kind:7375, und das Guthaben ist ihre Summe — das juengste allein
+   * sagt nichts.
+   */
+  fetchEvents(relays: string[], filter: EventFilter): Promise<SignedNostrEvent[]>;
   /**
    * Baut die Verbindungen auf, bevor irgendetwas Unwiderrufliches passiert.
    * Liefert die erreichbaren Relays; wirft, wenn keines erreichbar ist.

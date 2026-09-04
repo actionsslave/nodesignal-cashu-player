@@ -1,15 +1,16 @@
 /**
- * SFR-05: eine einzige Seite ohne Routing mit vier Bereichen — Episodenliste,
- * Player, Wallet, Einstellungen.
+ * SFR-05: eine einzige Seite ohne Routing. Aufbau nach Entwurf 5a — Kopf,
+ * Aktuelle Folge mit Sticky-Streifen, Folgen, Zahlungsquelle.
  *
- * Die Gestaltung ist schmucklos: Das Design-Handoff stand beim Bauen nicht zur
- * Verfügung. Struktur und Verhalten folgen der Spezifikation; wenn das Handoff
- * kommt, wird umgestylt, nicht neu gebaut.
+ * Verlauf, Einstellungen und die Erklärung stehen weiter unten und werden im
+ * nächsten Schritt auf den Entwurf gezogen; die Anker im Index zeigen schon
+ * dorthin.
  */
 import { render } from 'preact';
 import { useCallback, useEffect, useMemo, useState } from 'preact/hooks';
 import {
   ALLOWED_MINTS,
+  DEMO_RELAYS,
   FLOAT_DEFAULT_SATS,
   RECIPIENT_NPUB,
   STREAMING_RATE_DEFAULT_SATS_PER_MINUTE,
@@ -18,27 +19,33 @@ import {
 import snapshotJson from './feed/snapshot.json';
 import type { FeedSnapshot } from './feed/snapshot-parse.js';
 import { loadEpisodes, type LoadedEpisodes } from './feed/episodes.js';
+import { Masthead } from './ui/masthead.js';
 import { EpisodeList } from './ui/episode-list.js';
 import { Player } from './ui/player.js';
-import { WalletView } from './ui/wallet-view.js';
+import { SourceSection } from './ui/source-section.js';
 import { SettingsView } from './ui/settings-view.js';
-import { detectSigner } from './identity/nip07.js';
+import { detectSigner, nip44Decrypt } from './identity/nip07.js';
 import { login, restoreSession, shortNpub, type Session } from './identity/session.js';
 import { evaluateSources, type SourceId } from './payments/source.js';
 import { resolvePaymentTarget } from './payments/resolve-target.js';
 import { SimplePoolGateway } from './payments/simple-pool-gateway.js';
+import { readNip60Wallet, type Nip60Snapshot } from './nip60/read.js';
 import { LocalWallet } from './wallet/local-wallet.js';
 import { CashuMintGateway } from './wallet/cashu-mint-gateway.js';
 import { mintOverview } from './wallet/mint-overview.js';
-import { listHistory } from './wallet/history.js';
 import { readStorageMode } from './wallet/persistence.js';
 import { TokenImportError } from './wallet/mint-gateway.js';
 import { loadPosition } from './player/position-store.js';
-import { openDatabase, type EpisodeRecord, type HistoryRecord } from './db/database.js';
+import { openDatabase, type EpisodeRecord } from './db/database.js';
 import type { PaymentTarget } from './contracts/index.js';
 import './ui/app.css';
 
 const snapshot = snapshotJson as FeedSnapshot;
+
+const QUELLEN_NAME: Record<SourceId, string> = {
+  nip60: 'nostr-Wallet (NIP-60)',
+  local: 'Lokale Wallet',
+};
 
 function App() {
   const [session, setSession] = useState<Session | undefined>(undefined);
@@ -47,7 +54,7 @@ function App() {
   const [nowPlaying, setNowPlaying] = useState<EpisodeRecord | undefined>(undefined);
   const [target, setTarget] = useState<PaymentTarget | undefined>(undefined);
   const [localBalance, setLocalBalance] = useState<Record<string, number>>({});
-  const [history, setHistory] = useState<HistoryRecord[]>([]);
+  const [nip60, setNip60] = useState<Nip60Snapshot | undefined>(undefined);
   const [storageMode, setStorageMode] = useState<string | undefined>(undefined);
   const [activeSource, setActiveSource] = useState<SourceId | undefined>(undefined);
   const [token, setToken] = useState('');
@@ -63,15 +70,10 @@ function App() {
 
   const refreshWallet = useCallback(async () => {
     const db = await openDatabase();
-    const [proofs, entries, mode] = await Promise.all([
-      db.getAll('proofs'),
-      listHistory(),
-      readStorageMode(),
-    ]);
+    const [proofs, mode] = await Promise.all([db.getAll('proofs'), readStorageMode()]);
     const byMint: Record<string, number> = {};
     for (const row of mintOverview(proofs)) byMint[row.url] = row.balance;
     setLocalBalance(byMint);
-    setHistory(entries);
     setStorageMode(mode);
   }, []);
 
@@ -103,20 +105,37 @@ function App() {
     };
   }, [nostr]);
 
+  // SFR-13, SNR-01: die NIP-60-Wallet wird gelesen, nie angelegt.
+  useEffect(() => {
+    if (!session || !signer.nip44) return;
+    let cancelled = false;
+    void readNip60Wallet({
+      pubkeyHex: session.pubkeyHex,
+      relays: [...DEMO_RELAYS],
+      gateway: nostr,
+      decrypt: nip44Decrypt,
+    })
+      .then((gelesen) => {
+        if (!cancelled) setNip60(gelesen);
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [session, signer.nip44, nostr]);
+
   const sources = useMemo(
     () =>
       evaluateSources({
         loggedIn: Boolean(session),
         hasNip44: signer.nip44,
-        // SFR-13: das kind:17375 wird noch nicht gelesen — bis dahin gilt die
-        // NIP-60-Quelle als „keine Wallet gefunden", nicht als verfügbar.
-        walletEvent: undefined,
-        nip60BalanceByMint: {},
+        walletEvent: nip60?.wallet,
+        nip60BalanceByMint: nip60?.balanceByMint ?? {},
         localBalanceByMint: localBalance,
         allowedMints: ALLOWED_MINTS,
         recipientMints: target?.status === 'resolved' ? target.mints : [],
       }),
-    [session, signer.nip44, localBalance, target],
+    [session, signer.nip44, nip60, localBalance, target],
   );
 
   useEffect(() => {
@@ -136,77 +155,81 @@ function App() {
     }
   }
 
+  const quelleAktiv = activeSource ? QUELLEN_NAME[activeSource] : 'keine gewählt';
+
   return (
-    <main>
-      <h1>Nodesignal — Cashu-Player</h1>
+    <div class="page">
+      <Masthead
+        npubShort={session ? shortNpub(session.npub) : undefined}
+        onLogin={() => void login().then(setSession).catch(() => undefined)}
+        feedFetchedAt={feed?.fetchedAt ?? snapshot.fetchedAt}
+        feedStale={feed?.stale}
+        sourceLabel={quelleAktiv}
+      />
 
       {hasPlaceholders() && (
-        <p class="notice">
-          Konfiguration unvollständig: In <code>src/config/build-config.ts</code> stehen noch
-          Platzhalter für Feed, Empfänger oder Mints. Zahlungen bleiben deshalb gesperrt.
-        </p>
+        <section class="block first">
+          <p class="fail">
+            Konfiguration unvollständig: In <code>src/config/build-config.ts</code> stehen noch
+            Platzhalter für Feed, Empfänger oder Mints. Zahlungen bleiben deshalb gesperrt.
+          </p>
+        </section>
       )}
 
-      <section>
-        {session ? (
-          <p>Angemeldet als {shortNpub(session.npub)}</p>
-        ) : (
-          <button type="button" onClick={() => void login().then(setSession).catch(() => undefined)}>
-            Mit nostr anmelden
-          </button>
-        )}
-        {!signer.available && (
-          <p class="notice">
-            Keine NIP-07-Extension gefunden. Episodenliste und Wiedergabe funktionieren trotzdem;
-            Zahlungen brauchen eine Extension.
-          </p>
-        )}
-      </section>
+      <Player
+        episode={nowPlaying}
+        podcastTitle={feed?.title}
+        artworkUrl={nowPlaying ? feed?.imageUrl : undefined}
+        onPositionChange={() => undefined}
+        sessionSent={0}
+        floatRemaining={activeSource === 'nip60' ? 0 : undefined}
+        rate={rate}
+        sourceNote={activeSource === 'local' ? 'aus der lokalen Wallet' : 'aus dem Float'}
+        canBoost={false}
+      />
 
-      <section>
-        <h2>Episoden</h2>
-        {/* SFR-09: scheitert der Laufzeit-Abruf, bleibt der Build-Stand mit Datum. */}
-        {feed?.stale && (
-          <p class="stale">
-            Feed nicht erreichbar — angezeigt wird der Stand vom{' '}
-            {new Date(feed.fetchedAt).toLocaleString('de-DE')}.
-          </p>
-        )}
-        <EpisodeList
-          episodes={feed?.episodes ?? []}
-          positions={positions}
-          playingId={nowPlaying?.id}
-          onPlay={setNowPlaying}
-        />
-      </section>
+      <EpisodeList
+        episodes={feed?.episodes ?? []}
+        positions={positions}
+        playingId={nowPlaying?.id}
+        onPlay={setNowPlaying}
+      />
 
-      <section>
-        <h2>Player</h2>
-        <Player
-          episode={nowPlaying}
-          podcastTitle={feed?.title}
-          artworkUrl={feed?.imageUrl}
-          onPositionChange={() => undefined}
-        />
-      </section>
-
-      <WalletView
+      <SourceSection
         sources={sources}
         active={activeSource}
-        onChooseSource={setActiveSource}
+        onChoose={setActiveSource}
         floatRemaining={0}
+        floatAmount={floatAmount}
+        onChangeFloat={() => undefined}
         sessionSent={0}
-        history={history}
+        nip60BalanceByMint={nip60?.balanceByMint ?? {}}
+        localBalanceByMint={localBalance}
+        storageMode={storageMode}
         token={token}
         onTokenChange={setToken}
         onImport={() => void handleImport()}
-        onExport={() =>
-          void wallet.exportTokens().then((liste) => setExportToken(liste[0]?.token))
+        onExport={() => void wallet.exportTokens().then((liste) => setExportToken(liste[0]?.token))}
+        onPaste={() =>
+          void navigator.clipboard
+            ?.readText()
+            .then((text) => setToken(text.trim()))
+            .catch(() => undefined)
         }
-        importError={importError}
-        exportToken={exportToken}
-        storageMode={storageMode}
       />
+
+      {importError && (
+        <section class="block">
+          <p class="fail">{importError}</p>
+        </section>
+      )}
+
+      {exportToken && (
+        <section class="block">
+          <span class="kicker">Exportierter Token</span>
+          <p style={{ wordBreak: 'break-all', fontSize: '14px' }}>{exportToken}</p>
+        </section>
+      )}
 
       <SettingsView
         floatAmount={floatAmount}
@@ -216,7 +239,7 @@ function App() {
         onConfirmFloat={async () => undefined}
         onConfirmRate={async () => undefined}
       />
-    </main>
+    </div>
   );
 }
 

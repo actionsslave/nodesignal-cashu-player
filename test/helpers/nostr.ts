@@ -31,6 +31,8 @@ export function kind10019(options: {
 
 export interface FakeNostrOptions {
   event?: SignedNostrEvent;
+  /** SFR-14: mehrere kind:7375 zum selben Filter. */
+  events?: SignedNostrEvent[];
   /** Relays, die mit OK antworten. Leer heißt: keines bestätigt (US-06-AC-4). */
   acceptedBy?: string[];
   connectFails?: boolean;
@@ -50,6 +52,10 @@ export function fakeNostr(options: FakeNostrOptions = {}): FakeNostrGateway {
     async fetchEvent(_relays, filter) {
       fetches.push(filter);
       return options.event;
+    },
+    async fetchEvents(_relays, filter) {
+      fetches.push(filter);
+      return options.events ?? (options.event ? [options.event] : []);
     },
     async connect(relays) {
       if (options.connectFails) throw new Error('Kein Relay erreichbar');

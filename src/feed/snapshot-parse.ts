@@ -47,6 +47,10 @@ function decode(value: string): string {
     .replace(/&quot;/g, '"')
     .replace(/&#39;/g, "'")
     .replace(/&amp;/g, '&')
+    // Der echte Feed schreibt Gedankenstriche als &#8211;. Ohne diese Zeile
+    // stuenden die Entities woertlich in den Episodentiteln.
+    .replace(/&#x([0-9a-f]+);/gi, (_, hex: string) => String.fromCodePoint(parseInt(hex, 16)))
+    .replace(/&#(\d+);/g, (_, dez: string) => String.fromCodePoint(Number(dez)))
     .trim();
 }
 
@@ -82,7 +86,12 @@ export function parseSnapshot(xml: string, fetchedAt: string): FeedSnapshot {
   return {
     title: tag(channel, 'title') ?? 'Nodesignal',
     imageUrl: attr(channel, 'itunes:image', 'href') ?? tag(channel, 'url'),
-    npub: /npub1[023456789acdefghjklmnpqrstuvwxyz]{58}/.exec(xml)?.[0],
+    // Nur die erklaerte Identitaet zaehlt (FR-21). Der Nodesignal-Feed nennt in
+    // den Shownotes auch npubs von Gaesten; ein Treffer irgendwo im XML waere
+    // der falsche.
+    npub: /<podcast:txt[^>]*purpose="nostr"[^>]*>\s*(npub1[023456789acdefghjklmnpqrstuvwxyz]{58})\s*</i.exec(
+      channel,
+    )?.[1],
     episodes: episodes
       .sort((a, b) => b.publishedAt - a.publishedAt)
       .slice(0, EPISODES_PER_FEED),

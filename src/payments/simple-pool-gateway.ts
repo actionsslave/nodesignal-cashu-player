@@ -26,6 +26,14 @@ export class SimplePoolGateway implements NostrGateway {
     return event ? (event as SignedNostrEvent) : undefined;
   }
 
+  /** SFR-14: alle Events zum Filter, nicht nur das juengste. */
+  async fetchEvents(relays: string[], filter: EventFilter): Promise<SignedNostrEvent[]> {
+    const events = await this.pool.querySync([...relays], filter as Filter, {
+      maxWait: MAX_WAIT_MS,
+    });
+    return events as SignedNostrEvent[];
+  }
+
   /** Verbindet vor dem unwiderruflichen Mint-Swap; liefert die erreichbaren Relays. */
   async connect(relays: string[]): Promise<string[]> {
     const attempts = await Promise.allSettled(

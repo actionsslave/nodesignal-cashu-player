@@ -31,7 +31,7 @@ export function SettingsView({
   const [satz, setSatz] = useState(rate);
 
   return (
-    <section class="settings">
+    <section class="block settings" id="einstellungen">
       <h2>Einstellungen</h2>
 
       <div class="field">

@@ -1,0 +1,1582 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<meta name="design_doc_mode" content="canvas">
+<link rel="stylesheet" href="_ds/broadsheet-9810c4cb-2d7d-4485-8f90-b9dcd31d14bb/styles.css">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/duotone/style.css">
+<script src="./image-slot.js"></script>
+<script src="_ds/broadsheet-9810c4cb-2d7d-4485-8f90-b9dcd31d14bb/_ds_bundle.js"></script>
+<style>
+body{margin:0;background:#e6e4e1}
+a{color:var(--color-accent-700);text-decoration:none}
+a:hover{color:var(--color-accent-600)}
+.dv-turn{padding:40px 44px 32px;scroll-margin-top:16px}
+.dv-thd{display:flex;align-items:baseline;gap:10px;margin:0 0 20px}
+.dv-tid{font:600 11px/1 var(--font-heading);padding:4px 8px;background:var(--color-text);color:var(--color-bg);border-radius:var(--radius-md);text-decoration:none}
+.dv-tname{font:600 14px/1.2 var(--font-heading);color:var(--color-text)}
+.dv-opts{display:flex;flex-wrap:wrap;gap:44px;align-items:flex-start}
+.dv-opt{flex:none;display:flex;flex-direction:column;gap:14px;scroll-margin-top:16px}
+.dv-oid{font:600 11px/1 var(--font-heading);padding:4px 8px;background:color-mix(in srgb,var(--color-text) 12%,transparent);color:var(--color-text);border-radius:var(--radius-md);text-decoration:none}
+.dv-olabel{display:flex;align-items:baseline;gap:9px;font:400 14px/1.3 var(--font-body);color:color-mix(in srgb,var(--color-text) 72%,transparent)}
+.dv-opt:target .dv-oid{background:var(--color-accent);color:var(--color-bg)}
+.dv-next{margin:28px 0 0;font:14px/1.6 var(--font-body);color:color-mix(in srgb,var(--color-text) 65%,transparent)}
+.dv-frames{display:grid;grid-template-columns:repeat(2,1120px);gap:30px}
+.dv-cap{font:400 12px/1 var(--font-body);text-transform:uppercase;letter-spacing:.12em;color:color-mix(in srgb,var(--color-text) 55%,transparent);margin:0 0 9px}
+</style>
+</helmet>
+
+<section class="dv-turn" id="t5">
+<div class="dv-thd"><a class="dv-tid" href="#t5">5</a><span class="dv-tname">Nodesignal-Showcase — eine Seite, zwei gleichrangige Zahlungsquellen</span></div>
+
+<div style="max-width:1180px;margin:0 0 34px">
+<p style="margin:0;font-size:12px;text-transform:uppercase;letter-spacing:.12em;color:color-mix(in srgb,var(--color-text) 55%,transparent)">What the specification changes about the design</p>
+<p style="margin:8px 0 0;font-size:16px;line-height:1.6;max-width:78ch">Three things reshape the interface. It is <strong>one podcast on one page</strong>, so the library, the show page and the search state fall away and the four areas — Folgen, Player, Wallet, Einstellungen — become sections of a single scroll with an index in the masthead. The wallet is no longer one balance but <strong>two equal-rank sources side by side</strong>, exactly one of them active, each carrying its own balance, its own mint intersection and its own reason for being unavailable. And the NIP-60 source introduces a quantity the old design had no place for: the <strong>Float</strong> — money taken out of the nostr wallet once per session and spent locally — which means the wallet has to show three numbers at once (Wallet, Float, in dieser Sitzung gesendet) and the history has to name the source and distinguish Entnahme and Rückgabe from actual payments. Sending stays as it was; receiving never existed.</p>
+<p style="margin:12px 0 0;font-size:15px;line-height:1.6;max-width:78ch;color:color-mix(in srgb,var(--color-text) 72%,transparent)">Derived, not specified: the four areas sit on one scroll with a sticky index rather than in-page tabs (SFR-05 forbids routing, not anchors); the player pins to the bottom as a slim strip once scrolled past, so paying stays visible while reading; and money-moving actions (Float-Entnahme, Quellenwechsel, Export) each get a confirmation, since SNR-06 requires explicit consent before any payment.</p>
+</div>
+
+<div class="dv-opts">
+
+<div class="dv-opt" id="5a">
+<div class="dv-olabel"><a class="dv-oid" href="#5a">5a</a>Die Seite — angemeldet, Quelle NIP-60 aktiv, Float offen</div>
+<div class="dv-frames" style="grid-template-columns:1120px">
+
+<div>
+<p class="dv-cap">player.nodesignal.space · eine Seite, scrollend</p>
+<div data-screen-label="5a Seite" style="width:1120px;background:var(--color-bg);color:var(--color-text);font-family:var(--font-body);box-shadow:var(--shadow-md)">
+
+  <div style="padding:22px 40px 0">
+    <div style="display:flex;align-items:baseline;gap:26px">
+      <span style="font-family:var(--font-heading);font-weight:600;font-size:26px;letter-spacing:-0.02em">Nodesignal</span>
+      <span style="font-size:16px;color:color-mix(in srgb,var(--color-text) 72%,transparent)">Player</span>
+      <div style="flex:1"></div>
+      <div style="display:flex;align-items:baseline;gap:20px;font-size:15px">
+        <span style="font-family:var(--font-heading);font-weight:600;color:var(--color-accent-700)">Folgen</span>
+        <span style="color:color-mix(in srgb,var(--color-text) 72%,transparent)">Wallet</span>
+        <span style="color:color-mix(in srgb,var(--color-text) 72%,transparent)">Einstellungen</span>
+        <span style="color:color-mix(in srgb,var(--color-text) 72%,transparent)">Was ist das?</span>
+      </div>
+      <div style="width:26px"></div>
+      <span style="font-size:14px;font-variant-numeric:tabular-nums;color:color-mix(in srgb,var(--color-text) 70%,transparent)">npub1l2v…p3afq</span>
+    </div>
+    <div style="height:3px;background:var(--color-text);margin-top:14px"></div>
+    <div style="display:flex;justify-content:space-between;padding:7px 0;font-size:12px;text-transform:uppercase;letter-spacing:.1em;color:color-mix(in srgb,var(--color-text) 62%,transparent)">
+      <span>Value for Value mit Ecash</span>
+      <span>Feed-Stand 4. September 2026</span>
+      <span>Quelle: nostr-Wallet (NIP-60)</span>
+    </div>
+    <div style="height:1px;background:var(--color-divider)"></div>
+  </div>
+
+  <div style="padding:30px 40px 0">
+    <div style="display:flex;gap:28px;align-items:flex-start">
+      <image-slot id="ns-cover-140" placeholder="Cover Folge 140" class="halftone" style="width:168px;height:168px;flex:none"></image-slot>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:12px;text-transform:uppercase;letter-spacing:.12em;color:color-mix(in srgb,var(--color-text) 55%,transparent)">Läuft · Folge 140 · 28. August 2026</div>
+        <h2 style="margin:8px 0 0;font-size:30px;line-height:1.15;max-width:36ch">Nodesignal-Talk — E140 — Ecash, Nutzaps und Value for Value</h2>
+        <div style="display:flex;align-items:center;gap:16px;margin-top:20px;max-width:720px">
+          <span style="font-size:14px;font-variant-numeric:tabular-nums;color:color-mix(in srgb,var(--color-text) 65%,transparent)">12:38</span>
+          <div style="flex:1;height:2px;background:var(--color-neutral-300);position:relative">
+            <div style="position:absolute;inset:0 62% 0 0;background:var(--color-accent)"></div>
+            <div style="position:absolute;left:38%;top:-4px;width:10px;height:10px;border-radius:50%;background:var(--color-accent)"></div>
+          </div>
+          <span style="font-size:14px;font-variant-numeric:tabular-nums;color:color-mix(in srgb,var(--color-text) 65%,transparent)">−20:44</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:22px;margin-top:14px">
+          <i class="ph-duotone ph-arrow-counter-clockwise" style="font-size:21px" title="15 s zurück"></i>
+          <i class="ph-duotone ph-pause-circle" style="font-size:52px;color:var(--color-accent-700)"></i>
+          <i class="ph-duotone ph-arrow-clockwise" style="font-size:21px" title="30 s vor"></i>
+          <div style="width:8px"></div>
+          <span class="btn btn-primary" style="font-size:15px;padding:9px 20px;white-space:nowrap;flex:none"><i class="ph-duotone ph-lightning"></i>Boost</span>
+          <span style="font-size:14px;font-variant-numeric:tabular-nums;color:color-mix(in srgb,var(--color-text) 72%,transparent)">Streaming 10 Sat/Min · aus dem Float</span>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:44px;align-items:baseline;margin-top:24px;padding-top:14px;border-top:1px solid var(--color-divider)">
+      <span style="font-size:15px;font-variant-numeric:tabular-nums">In dieser Sitzung gesendet <strong>30 Sat</strong></span>
+      <span style="font-size:15px;font-variant-numeric:tabular-nums;color:color-mix(in srgb,var(--color-text) 72%,transparent)">Float 470 Sat</span>
+      <span style="font-size:15px;color:color-mix(in srgb,var(--color-text) 72%,transparent)">Keine Wallet-Events seit der Entnahme</span>
+      <div style="flex:1"></div>
+      <span class="btn btn-ghost" style="font-size:14px;white-space:nowrap;flex:none">Float jetzt zurückschreiben</span>
+    </div>
+  </div>
+
+  <div style="padding:34px 40px 0">
+    <div style="display:flex;align-items:baseline;justify-content:space-between;gap:24px">
+      <h3 style="margin:0;font-size:25px">Folgen</h3>
+      <span style="font-size:14px;color:color-mix(in srgb,var(--color-text) 62%,transparent)">Die 20 neuesten · absteigend nach Datum</span>
+    </div>
+    <div style="margin-top:14px;border-top:1px solid var(--color-divider)">
+
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) auto 44px;align-items:center;gap:0 24px;padding:16px 0;border-bottom:1px solid var(--color-divider)">
+        <div style="min-width:0">
+          <div style="font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:color-mix(in srgb,var(--color-text) 62%,transparent)">28. August 2026 · 33 min · läuft</div>
+          <div style="font-family:var(--font-heading);font-weight:600;font-size:19px;margin-top:3px">E140 — Ecash, Nutzaps und Value for Value</div>
+          <div style="font-size:14px;color:color-mix(in srgb,var(--color-text) 70%,transparent);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px">Wie Ecash-Zahlungen ohne Konto funktionieren und was das für Podcasts bedeutet.</div>
+        </div>
+        <span style="font-size:14px;font-variant-numeric:tabular-nums;color:color-mix(in srgb,var(--color-text) 70%,transparent);white-space:nowrap">Fortsetzen bei 12:38</span>
+        <span class="btn btn-icon btn-secondary" style="font-size:17px"><i class="ph-duotone ph-play"></i></span>
+      </div>
+
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) auto 44px;align-items:center;gap:0 24px;padding:16px 0;border-bottom:1px solid var(--color-divider)">
+        <div style="min-width:0">
+          <div style="font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:color-mix(in srgb,var(--color-text) 62%,transparent)">21. August 2026 · 58 min</div>
+          <div style="font-family:var(--font-heading);font-weight:600;font-size:19px;margin-top:3px">E139 — Mints, Vertrauen und die Frage der Verwahrung</div>
+          <div style="font-size:14px;color:color-mix(in srgb,var(--color-text) 70%,transparent);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px">Ein Token ist eine Forderung gegen genau einen Mint. Was daraus folgt.</div>
+        </div>
+        <span style="font-size:14px;font-variant-numeric:tabular-nums;color:color-mix(in srgb,var(--color-text) 70%,transparent);white-space:nowrap">58 min</span>
+        <span class="btn btn-icon btn-secondary" style="font-size:17px"><i class="ph-duotone ph-play"></i></span>
+      </div>
+
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) auto 44px;align-items:center;gap:0 24px;padding:16px 0;border-bottom:1px solid var(--color-divider)">
+        <div style="min-width:0">
+          <div style="font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:color-mix(in srgb,var(--color-text) 62%,transparent)">14. August 2026 · 47 min</div>
+          <div style="font-family:var(--font-heading);font-weight:600;font-size:19px;margin-top:3px">E138 — nostr für Hörer, nicht für Entwickler</div>
+          <div style="font-size:14px;color:color-mix(in srgb,var(--color-text) 70%,transparent);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px">Login ohne Konto, Identität ohne Anbieter, und wo die Grenzen liegen.</div>
+        </div>
+        <span style="font-size:14px;font-variant-numeric:tabular-nums;color:color-mix(in srgb,var(--color-text) 70%,transparent);white-space:nowrap">Gehört</span>
+        <span class="btn btn-icon btn-ghost" style="font-size:17px"><i class="ph-duotone ph-play"></i></span>
+      </div>
+
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) auto 44px;align-items:center;gap:0 24px;padding:16px 0;border-bottom:1px solid var(--color-divider)">
+        <div style="min-width:0">
+          <div style="font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:color-mix(in srgb,var(--color-text) 62%,transparent)">7. August 2026 · 41 min</div>
+          <div style="font-family:var(--font-heading);font-weight:600;font-size:19px;margin-top:3px">E137 — Lightning, Ecash und was wofür taugt</div>
+          <div style="font-size:14px;color:color-mix(in srgb,var(--color-text) 70%,transparent);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px">Zwei Zahlungswege, zwei Zwecke. Ein Vergleich ohne Lagerdenken.</div>
+        </div>
+        <span style="font-size:14px;font-variant-numeric:tabular-nums;color:color-mix(in srgb,var(--color-text) 70%,transparent);white-space:nowrap">Gehört</span>
+        <span class="btn btn-icon btn-ghost" style="font-size:17px"><i class="ph-duotone ph-play"></i></span>
+      </div>
+
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) auto 44px;align-items:center;gap:0 24px;padding:16px 0;border-bottom:1px solid var(--color-divider)">
+        <div style="min-width:0">
+          <div style="font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:color-mix(in srgb,var(--color-text) 62%,transparent)">31. Juli 2026 · 52 min</div>
+          <div style="font-family:var(--font-heading);font-weight:600;font-size:19px;margin-top:3px">E136 — Podcasting 2.0 in der Praxis</div>
+          <div style="font-size:14px;color:color-mix(in srgb,var(--color-text) 70%,transparent);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px">Kapitelmarken, Transkripte, Value-Tags: was Hörer davon merken.</div>
+        </div>
+        <span style="font-size:14px;font-variant-numeric:tabular-nums;color:color-mix(in srgb,var(--color-text) 70%,transparent);white-space:nowrap">52 min</span>
+        <span class="btn btn-icon btn-secondary" style="font-size:17px"><i class="ph-duotone ph-play"></i></span>
+      </div>
+    </div>
+    <div style="margin-top:14px"><span class="btn btn-ghost" style="font-size:14px">Ältere Folgen anzeigen</span></div>
+  </div>
+
+  <div style="padding:38px 40px 0">
+    <div style="display:flex;align-items:baseline;justify-content:space-between;gap:24px">
+      <h3 style="margin:0;font-size:25px">Zahlungsquelle</h3>
+      <span style="font-size:14px;color:color-mix(in srgb,var(--color-text) 62%,transparent)">Genau eine Quelle ist aktiv · die Wahl bleibt nach einem Reload erhalten</span>
+    </div>
+    <p style="margin:6px 0 22px;font-size:15px;line-height:1.6;max-width:84ch;color:color-mix(in srgb,var(--color-text) 78%,transparent)">Beide Quellen können dasselbe. Die nostr-Wallet zahlt aus deinem bestehenden Guthaben auf Relays, die lokale Wallet aus einem Token, den du hier hinterlegt hast. Guthaben wird zwischen den Quellen nie verschoben, außer als Float-Entnahme und Float-Rückgabe.</p>
+
+    <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:52px">
+
+      <div>
+        <div style="display:flex;align-items:baseline;gap:12px">
+          <span class="radio"><span class="dot" style="border-color:var(--color-accent);background:var(--color-accent);box-shadow:inset 0 0 0 4px var(--color-bg)"></span></span>
+          <h4 style="margin:0;font-family:var(--font-heading);font-weight:600;font-size:21px">nostr-Wallet (NIP-60)</h4>
+          <span class="tag tag-accent" style="font-size:12px">Aktiv</span>
+        </div>
+        <div style="display:flex;align-items:baseline;gap:14px;margin-top:14px">
+          <span style="font-family:var(--font-heading);font-weight:600;font-size:52px;line-height:.9;letter-spacing:-0.03em;font-variant-numeric:tabular-nums">1.500</span>
+          <span style="font-family:var(--font-heading);font-weight:600;font-size:20px">Sat</span>
+          <span style="font-size:14px;color:color-mix(in srgb,var(--color-text) 62%,transparent)">in der Wallet</span>
+        </div>
+        <div style="display:grid;grid-template-columns:auto auto;gap:6px 20px;margin-top:14px;font-size:15px;font-variant-numeric:tabular-nums">
+          <span style="color:color-mix(in srgb,var(--color-text) 72%,transparent)">Float (lokal verfügbar)</span><span>470 Sat</span>
+          <span style="color:color-mix(in srgb,var(--color-text) 72%,transparent)">In dieser Sitzung gesendet</span><span>30 Sat</span>
+        </div>
+        <div style="margin-top:18px;padding-top:14px;border-top:1px solid var(--color-divider)">
+          <div style="font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:color-mix(in srgb,var(--color-text) 62%,transparent)">Nutzbare Mints — kind:17375 ∩ erlaubte Liste ∩ kind:10019</div>
+          <div style="display:flex;flex-direction:column;gap:5px;margin-top:8px;font-size:15px">
+            <span>mint.minibits.cash <span style="color:color-mix(in srgb,var(--color-text) 60%,transparent)">· 1.200 Sat</span></span>
+            <span>mint.macadamia.cash <span style="color:color-mix(in srgb,var(--color-text) 60%,transparent)">· 300 Sat</span></span>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:14px;margin-top:16px">
+          <span style="font-size:15px;font-variant-numeric:tabular-nums">Float-Betrag 500 Sat</span>
+          <span class="btn btn-ghost" style="font-size:14px;white-space:nowrap;flex:none">Ändern</span>
+        </div>
+        <p style="margin:12px 0 0;font-size:14px;line-height:1.6;color:color-mix(in srgb,var(--color-text) 68%,transparent)">Streaming und Boosts laufen gegen den Float. Auf die Relays wird zweimal je Sitzung geschrieben: bei der Entnahme und bei der Rückgabe.</p>
+      </div>
+
+      <div>
+        <div style="display:flex;align-items:baseline;gap:12px">
+          <span class="radio"><span class="dot"></span></span>
+          <h4 style="margin:0;font-family:var(--font-heading);font-weight:600;font-size:21px">Lokale Wallet</h4>
+          <span class="tag tag-neutral" style="font-size:12px">Bereit</span>
+        </div>
+        <div style="display:flex;align-items:baseline;gap:14px;margin-top:14px">
+          <span style="font-family:var(--font-heading);font-weight:600;font-size:52px;line-height:.9;letter-spacing:-0.03em;font-variant-numeric:tabular-nums">300</span>
+          <span style="font-family:var(--font-heading);font-weight:600;font-size:20px">Sat</span>
+          <span style="font-size:14px;color:color-mix(in srgb,var(--color-text) 62%,transparent)">auf diesem Gerät</span>
+        </div>
+        <div style="display:grid;grid-template-columns:auto auto;gap:6px 20px;margin-top:14px;font-size:15px;font-variant-numeric:tabular-nums">
+          <span style="color:color-mix(in srgb,var(--color-text) 72%,transparent)">Speicher</span><span>dauerhaft</span>
+          <span style="color:color-mix(in srgb,var(--color-text) 72%,transparent)">In dieser Sitzung gesendet</span><span>0 Sat</span>
+        </div>
+        <div style="margin-top:18px;padding-top:14px;border-top:1px solid var(--color-divider)">
+          <div style="font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:color-mix(in srgb,var(--color-text) 62%,transparent)">Nutzbare Mints — erlaubte Liste ∩ kind:10019</div>
+          <div style="display:flex;flex-direction:column;gap:5px;margin-top:8px;font-size:15px">
+            <span>mint.minibits.cash <span style="color:color-mix(in srgb,var(--color-text) 60%,transparent)">· 300 Sat</span></span>
+            <span>mint.macadamia.cash <span style="color:color-mix(in srgb,var(--color-text) 60%,transparent)">· 0 Sat</span></span>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;margin-top:16px">
+          <div class="input" style="flex:1;color:color-mix(in srgb,var(--color-text) 55%,transparent);font-size:14px">cashuA…</div>
+          <span class="btn btn-primary" style="font-size:14px;white-space:nowrap;flex:none">Aufladen</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:14px;margin-top:10px">
+          <span class="btn btn-secondary" style="font-size:14px;white-space:nowrap;flex:none">Als Token exportieren</span>
+          <span class="btn btn-ghost" style="font-size:14px;white-space:nowrap;flex:none"><i class="ph-duotone ph-clipboard"></i>Aus Zwischenablage</span>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:40px;margin-top:20px;font-size:14px;color:color-mix(in srgb,var(--color-text) 72%,transparent)">
+      <span>Eine Zahlung wird immer aus genau einer Quelle finanziert.</span>
+      <span>Beim Wechsel wird ein offener Float zurückgeschrieben, bevor die neue Quelle aktiv wird.</span>
+    </div>
+  </div>
+
+  <div style="padding:38px 40px 0">
+    <div style="display:flex;align-items:baseline;gap:20px">
+      <h3 style="margin:0;font-size:25px">Verlauf</h3>
+      <div style="display:flex;gap:8px">
+        <span class="tag" style="font-size:13px;background:var(--color-accent);color:var(--color-bg);border:1px solid var(--color-accent)">Alle</span>
+        <span class="tag tag-outline" style="font-size:13px">Streaming</span>
+        <span class="tag tag-outline" style="font-size:13px">Boost</span>
+        <span class="tag tag-outline" style="font-size:13px">Float</span>
+        <span class="tag tag-outline" style="font-size:13px">Wallet</span>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:110px 110px 160px 170px minmax(0,1fr) 130px;gap:0 22px;padding:14px 0 8px;font-size:12px;text-transform:uppercase;letter-spacing:.12em;color:color-mix(in srgb,var(--color-text) 55%,transparent);border-bottom:1px solid var(--color-divider)">
+      <span>Betrag</span><span>Wann</span><span>Art</span><span>Quelle</span><span>Folge</span><span>Status</span>
+    </div>
+
+      <div style="display:grid;grid-template-columns:110px 110px 160px 170px minmax(0,1fr) 130px;align-items:baseline;gap:0 22px;padding:11px 0;font-size:15px;border-bottom:1px solid var(--color-divider)">
+        <span style="font-variant-numeric:tabular-nums">−10 Sat</span><span style="color:color-mix(in srgb,var(--color-text) 65%,transparent)">vor 1 Min.</span><span>Streaming</span><span style="color:color-mix(in srgb,var(--color-text) 72%,transparent)">nostr-Wallet · Float</span><span style="color:color-mix(in srgb,var(--color-text) 72%,transparent)">E140</span><span style="color:var(--color-accent-700)">Gesendet</span>
+      </div>
+
+      <div style="display:grid;grid-template-columns:110px 110px 160px 170px minmax(0,1fr) 130px;align-items:baseline;gap:0 22px;padding:11px 0;font-size:15px;border-bottom:1px solid var(--color-divider)">
+        <span style="font-variant-numeric:tabular-nums">−10 Sat</span><span style="color:color-mix(in srgb,var(--color-text) 65%,transparent)">vor 2 Min.</span><span>Streaming</span><span style="color:color-mix(in srgb,var(--color-text) 72%,transparent)">nostr-Wallet · Float</span><span style="color:color-mix(in srgb,var(--color-text) 72%,transparent)">E140</span><span style="color:var(--color-accent-700)">Gesendet</span>
+      </div>
+
+      <div style="display:grid;grid-template-columns:110px 110px 160px 170px minmax(0,1fr) 130px;align-items:baseline;gap:0 22px;padding:11px 0;font-size:15px;border-bottom:1px solid var(--color-divider)">
+        <span style="font-variant-numeric:tabular-nums">−10 Sat</span><span style="color:color-mix(in srgb,var(--color-text) 65%,transparent)">vor 3 Min.</span><span>Streaming</span><span style="color:color-mix(in srgb,var(--color-text) 72%,transparent)">nostr-Wallet · Float</span><span style="color:color-mix(in srgb,var(--color-text) 72%,transparent)">E140</span><span style="color:var(--color-accent-700)">Gesendet</span>
+      </div>
+
+      <div style="display:grid;grid-template-columns:110px 110px 160px 170px minmax(0,1fr) 130px;align-items:baseline;gap:0 22px;padding:11px 0;font-size:15px;border-bottom:1px solid var(--color-divider)">
+        <span style="font-variant-numeric:tabular-nums">−500 Sat</span><span style="color:color-mix(in srgb,var(--color-text) 65%,transparent)">vor 4 Min.</span><span>Float-Entnahme</span><span style="color:color-mix(in srgb,var(--color-text) 72%,transparent)">nostr-Wallet</span><span style="color:color-mix(in srgb,var(--color-text) 72%,transparent)">—</span><span style="color:color-mix(in srgb,var(--color-text) 65%,transparent)">kind:7375 · kind:5</span>
+      </div>
+
+      <div style="display:grid;grid-template-columns:110px 110px 160px 170px minmax(0,1fr) 130px;align-items:baseline;gap:0 22px;padding:11px 0;font-size:15px;border-bottom:1px solid var(--color-divider)">
+        <span style="font-variant-numeric:tabular-nums">−210 Sat</span><span style="color:color-mix(in srgb,var(--color-text) 65%,transparent)">2. Sept.</span><span>Boost</span><span style="color:color-mix(in srgb,var(--color-text) 72%,transparent)">Lokale Wallet</span><span style="color:color-mix(in srgb,var(--color-text) 72%,transparent)">E139</span><span style="color:var(--color-accent-700)">Gesendet</span>
+      </div>
+
+      <div style="display:grid;grid-template-columns:110px 110px 160px 170px minmax(0,1fr) 130px;align-items:baseline;gap:0 22px;padding:11px 0;font-size:15px;border-bottom:1px solid var(--color-divider)">
+        <span style="font-variant-numeric:tabular-nums">+320 Sat</span><span style="color:color-mix(in srgb,var(--color-text) 65%,transparent)">2. Sept.</span><span>Float-Rückgabe</span><span style="color:color-mix(in srgb,var(--color-text) 72%,transparent)">nostr-Wallet</span><span style="color:color-mix(in srgb,var(--color-text) 72%,transparent)">—</span><span style="color:color-mix(in srgb,var(--color-text) 65%,transparent)">kind:7375</span>
+      </div>
+
+      <div style="display:grid;grid-template-columns:110px 110px 160px 170px minmax(0,1fr) 130px;align-items:baseline;gap:0 22px;padding:11px 0;font-size:15px">
+        <span style="font-variant-numeric:tabular-nums">+500 Sat</span><span style="color:color-mix(in srgb,var(--color-text) 65%,transparent)">1. Sept.</span><span>Aufgeladen</span><span style="color:color-mix(in srgb,var(--color-text) 72%,transparent)">Lokale Wallet</span><span style="color:color-mix(in srgb,var(--color-text) 72%,transparent)">—</span><span style="color:color-mix(in srgb,var(--color-text) 65%,transparent)">Eingelöst</span>
+      </div>
+  </div>
+
+  <div style="padding:38px 40px 0">
+    <h3 style="margin:0 0 4px;font-size:25px">Einstellungen</h3>
+    <p style="margin:0 0 14px;font-size:15px;color:color-mix(in srgb,var(--color-text) 72%,transparent)">Gilt für dieses Gerät. Vor der ersten Zahlung werden Float-Betrag und Streaming-Satz einmal bestätigt.</p>
+    <div style="display:grid;grid-template-columns:280px 200px minmax(0,1fr);align-items:baseline;gap:0 24px;padding:12px 0;border-top:1px solid var(--color-divider);font-size:15px">
+      <span>Float-Betrag</span><span style="font-variant-numeric:tabular-nums">500 Sat</span><span style="color:color-mix(in srgb,var(--color-text) 65%,transparent)">Bereich 100–10.000 · wird bei der ersten Entnahme bestätigt</span>
+    </div>
+    <div style="display:grid;grid-template-columns:280px 200px minmax(0,1fr);align-items:baseline;gap:0 24px;padding:12px 0;border-top:1px solid var(--color-divider);font-size:15px">
+      <span>Streaming-Satz</span><span style="font-variant-numeric:tabular-nums">10 Sat / Minute</span><span style="color:color-mix(in srgb,var(--color-text) 65%,transparent)">Abgerechnet je 60 s gehörter Zeit</span>
+    </div>
+    <div style="display:grid;grid-template-columns:280px 200px minmax(0,1fr);align-items:baseline;gap:0 24px;padding:12px 0;border-top:1px solid var(--color-divider);font-size:15px">
+      <span>Boost-Vorgaben</span><span style="font-variant-numeric:tabular-nums">100 · 500 · 2.100</span><span style="color:color-mix(in srgb,var(--color-text) 65%,transparent)">Frei wählbar beim Senden</span>
+    </div>
+    <div style="display:grid;grid-template-columns:280px 200px minmax(0,1fr);align-items:baseline;gap:0 24px;padding:12px 0;border-top:1px solid var(--color-divider);font-size:15px">
+      <span>History-Events (kind:7376)</span>
+      <span class="seg" style="font-size:13px;justify-self:start;width:fit-content"><span class="seg-opt"><span>Ein</span></span><span class="seg-opt" style="background:var(--color-accent);color:var(--color-bg)"><span>Aus</span></span></span>
+      <span style="color:color-mix(in srgb,var(--color-text) 65%,transparent)">Standardmäßig aus. Der Verlauf bleibt lokal.</span>
+    </div>
+    <div style="display:grid;grid-template-columns:280px 200px minmax(0,1fr);align-items:baseline;gap:0 24px;padding:12px 0;border-top:1px solid var(--color-divider);border-bottom:1px solid var(--color-divider);font-size:15px">
+      <span>Feed</span><span style="color:color-mix(in srgb,var(--color-text) 72%,transparent)">4. September 2026</span><span style="color:color-mix(in srgb,var(--color-text) 65%,transparent)">Stand aus dem Build · Live-Abruf war erfolgreich</span>
+    </div>
+  </div>
+
+  <div style="padding:38px 40px 0">
+    <h3 style="margin:0 0 4px;font-size:25px">Was ist das?</h3>
+    <p style="margin:0 0 20px;font-size:15px;color:color-mix(in srgb,var(--color-text) 72%,transparent)">Für Besucher ohne nostr-Extension und ohne Wallet.</p>
+    <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:44px">
+      <div>
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:color-mix(in srgb,var(--color-text) 62%,transparent)">Value for Value</div>
+        <p style="margin:8px 0 0;font-size:16px;line-height:1.6;color:color-mix(in srgb,var(--color-text) 84%,transparent)">Du zahlst, während du hörst — kleine Beträge pro Minute, statt Werbung oder Abo. Der Betrag steht bei dir, nicht bei uns.</p>
+      </div>
+      <div>
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:color-mix(in srgb,var(--color-text) 62%,transparent)">Was du brauchst</div>
+        <p style="margin:8px 0 0;font-size:16px;line-height:1.6;color:color-mix(in srgb,var(--color-text) 84%,transparent)">Eine nostr-Extension zum Anmelden und Guthaben in Sat — entweder in deiner nostr-Wallet oder als Cashu-Token, den du hier einfügst.</p>
+      </div>
+      <div>
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:color-mix(in srgb,var(--color-text) 62%,transparent)">Ohne alles</div>
+        <p style="margin:8px 0 0;font-size:16px;line-height:1.6;color:color-mix(in srgb,var(--color-text) 84%,transparent)">Hören funktioniert ohne Anmeldung und ohne Guthaben. Zahlungen sind dann einfach aus. <a href="#5a">Wie man anfängt</a>.</p>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-top:34px;height:74px;padding:0 40px;border-top:1px solid var(--color-divider);background:var(--color-neutral-100);display:flex;align-items:center;gap:26px">
+    <i class="ph-duotone ph-pause-circle" style="font-size:32px;color:var(--color-accent-700)"></i>
+    <div style="width:300px;min-width:0">
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:color-mix(in srgb,var(--color-text) 62%,transparent)">Nodesignal-Talk</div>
+      <div style="font-family:var(--font-heading);font-weight:600;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">E140 — Ecash, Nutzaps und Value for Value</div>
+    </div>
+    <div style="flex:1;display:flex;align-items:center;gap:14px">
+      <span style="font-size:13px;font-variant-numeric:tabular-nums;color:color-mix(in srgb,var(--color-text) 65%,transparent)">12:38</span>
+      <div style="flex:1;height:2px;background:var(--color-neutral-300);position:relative"><div style="position:absolute;inset:0 62% 0 0;background:var(--color-accent)"></div></div>
+      <span style="font-size:13px;font-variant-numeric:tabular-nums;color:color-mix(in srgb,var(--color-text) 65%,transparent)">−20:44</span>
+    </div>
+    <span style="font-size:13px;font-variant-numeric:tabular-nums;color:color-mix(in srgb,var(--color-text) 72%,transparent)">10 Sat/Min · Float 470</span>
+    <span class="btn btn-primary" style="font-size:14px;padding:7px 16px;white-space:nowrap;flex:none"><i class="ph-duotone ph-lightning"></i>Boost</span>
+  </div>
+</div>
+<p style="margin:10px 0 0;font-size:14px;line-height:1.6;color:color-mix(in srgb,var(--color-text) 65%,transparent);max-width:1120px">Die Leiste am Fuß ist beim Scrollen fixiert und trägt Transport, Streaming-Satz, Float und Boost. Die Kopfzeile scrollt mit; die vier Index-Links springen auf die Abschnitte.</p>
+</div>
+
+</div>
+</div>
+
+<div class="dv-opt" id="5b">
+<div class="dv-olabel"><a class="dv-oid" href="#5b">5b</a>Zustände und Dialoge — Float, Quellenwahl, Fehler</div>
+<div class="dv-frames" style="grid-template-columns:repeat(2,540px);gap:34px 30px">
+
+
+<div>
+<p class="dv-cap">Erste Entnahme · Bestätigung (SFR-18, SNR-06)</p>
+<div class="dialog" style="width:540px;padding:26px 28px;background:var(--color-bg);box-shadow:var(--shadow-lg);font-family:var(--font-body);color:var(--color-text)">
+  <div style="font-size:12px;text-transform:uppercase;letter-spacing:.12em;color:color-mix(in srgb,var(--color-text) 55%,transparent)">Vor der ersten Zahlung</div>
+  <h3 style="margin:8px 0 8px;font-size:25px">500 Sat aus deiner nostr-Wallet entnehmen</h3>
+  <p style="margin:0 0 14px;font-size:15px;line-height:1.6;color:color-mix(in srgb,var(--color-text) 78%,transparent)">Der Betrag wird einmal aus der Wallet genommen und liegt dann als Float lokal im Player. Streaming und Boosts laufen dagegen, ohne dass weiter auf Relays geschrieben wird. Der ungenutzte Rest geht am Ende der Sitzung zurück.</p>
+  <div style="display:grid;grid-template-columns:170px minmax(0,1fr);gap:8px 22px;font-size:15px;padding:14px 0;border-top:1px solid var(--color-divider);border-bottom:1px solid var(--color-divider)">
+    <span style="color:color-mix(in srgb,var(--color-text) 72%,transparent)">Float-Betrag</span><span style="font-variant-numeric:tabular-nums">500 Sat <span style="color:color-mix(in srgb,var(--color-text) 60%,transparent)">· 100–10.000</span></span>
+    <span style="color:color-mix(in srgb,var(--color-text) 72%,transparent)">Streaming-Satz</span><span style="font-variant-numeric:tabular-nums">10 Sat / Minute</span>
+    <span style="color:color-mix(in srgb,var(--color-text) 72%,transparent)">Mint</span><span>mint.minibits.cash</span>
+  </div>
+  <p style="margin:14px 0 0;font-size:14px;line-height:1.6;color:color-mix(in srgb,var(--color-text) 78%,transparent)">Einmaliger Hinweis: Bei NIP-60 liegen deine Proofs verschlüsselt auf deinen Relays. Verliert ein Relay diese Events, sind sie für alle Clients nicht mehr auffindbar. Das ist eine Eigenschaft von NIP-60, keine dieses Players.</p>
+  <div style="display:flex;align-items:center;gap:14px;margin-top:22px">
+    <span class="btn btn-primary" style="font-size:15px;padding:9px 20px;white-space:nowrap;flex:none">500 Sat entnehmen</span>
+    <span class="btn btn-secondary" style="font-size:14px;white-space:nowrap;flex:none">Abbrechen</span>
+    <span class="btn btn-ghost" style="font-size:14px;white-space:nowrap;flex:none">Betrag ändern</span>
+  </div></div>
+</div>
+
+
+<div>
+<p class="dv-cap">Nutzap senden · Boost (SFR-22, SFR-32)</p>
+<div class="dialog" style="width:540px;padding:26px 28px;background:var(--color-bg);box-shadow:var(--shadow-lg);font-family:var(--font-body);color:var(--color-text)">
+  <div style="font-size:12px;text-transform:uppercase;letter-spacing:.12em;color:color-mix(in srgb,var(--color-text) 55%,transparent)">Nodesignal · E140 · 14:12</div>
+  <h3 style="margin:8px 0 8px;font-size:25px">Boost senden</h3>
+  <p style="margin:0 0 14px;font-size:15px;line-height:1.6;color:color-mix(in srgb,var(--color-text) 78%,transparent)">Der Betrag geht als Cashu-Token an Nodesignal, gesperrt auf den Schlüssel aus kind:10019. Der Kommentar wird öffentlich auf nostr veröffentlicht.</p>
+  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+    <span class="tag tag-outline" style="font-size:14px">100</span>
+    <span class="tag" style="font-size:14px;background:var(--color-accent);color:var(--color-bg);border:1px solid var(--color-accent);font-weight:600">500</span>
+    <span class="tag tag-outline" style="font-size:14px">2.100</span>
+    <span class="tag tag-outline" style="font-size:14px">10.000</span>
+    <span style="font-size:14px;color:color-mix(in srgb,var(--color-text) 62%,transparent)">Sat · frei wählbar</span>
+  </div>
+  <div class="input" style="height:60px;margin-top:12px;color:color-mix(in srgb,var(--color-text) 55%,transparent);font-size:14px">Kommentar (öffentlich)</div>
+  <div style="display:grid;grid-template-columns:170px minmax(0,1fr);gap:8px 22px;font-size:15px;margin-top:16px;padding:14px 0;border-top:1px solid var(--color-divider);border-bottom:1px solid var(--color-divider)">
+    <span style="color:color-mix(in srgb,var(--color-text) 72%,transparent)">Quelle</span><span>nostr-Wallet · Float</span>
+    <span style="color:color-mix(in srgb,var(--color-text) 72%,transparent)">Mint</span><span>mint.minibits.cash</span>
+    <span style="color:color-mix(in srgb,var(--color-text) 72%,transparent)">Float danach</span><span style="font-variant-numeric:tabular-nums">−30 Sat</span>
+  </div>
+  <p style="margin:12px 0 0;font-size:14px;line-height:1.6;color:color-mix(in srgb,var(--color-text) 78%,transparent)">Der Float deckt 500 Sat nicht mehr. <a href="#5b">Float aufstocken</a> oder Betrag verringern.</p>
+  <div style="display:flex;align-items:center;gap:14px;margin-top:20px">
+    <span class="btn btn-primary" style="font-size:15px;padding:9px 20px;white-space:nowrap;flex:none"><i class="ph-duotone ph-lightning"></i>470 Sat senden</span>
+    <span class="btn btn-secondary" style="font-size:14px;white-space:nowrap;flex:none">Abbrechen</span>
+  </div></div>
+</div>
+
+
+<div>
+<p class="dv-cap">Quellenwechsel im Betrieb (SFR-31, SNR-07)</p>
+<div class="dialog" style="width:540px;padding:26px 28px;background:var(--color-bg);box-shadow:var(--shadow-lg);font-family:var(--font-body);color:var(--color-text)">
+  <div style="font-size:12px;text-transform:uppercase;letter-spacing:.12em;color:color-mix(in srgb,var(--color-text) 55%,transparent)">Wiedergabe läuft</div>
+  <h3 style="margin:8px 0 8px;font-size:25px">Auf die lokale Wallet umschalten</h3>
+  <p style="margin:0 0 14px;font-size:15px;line-height:1.6;color:color-mix(in srgb,var(--color-text) 78%,transparent)">Bevor die lokale Wallet aktiv wird, gehen 470 Sat offener Float zurück in deine nostr-Wallet. Guthaben wird dabei nicht zwischen den Quellen verschoben.</p>
+  <div style="display:grid;grid-template-columns:190px minmax(0,1fr);gap:8px 22px;font-size:15px;padding:14px 0;border-top:1px solid var(--color-divider);border-bottom:1px solid var(--color-divider)">
+    <span style="color:color-mix(in srgb,var(--color-text) 72%,transparent)">Float-Rückgabe</span><span style="font-variant-numeric:tabular-nums">470 Sat → kind:7375</span>
+    <span style="color:color-mix(in srgb,var(--color-text) 72%,transparent)">Neue Quelle</span><span>Lokale Wallet · 300 Sat</span>
+    <span style="color:color-mix(in srgb,var(--color-text) 72%,transparent)">Sitzungszähler</span><span style="font-variant-numeric:tabular-nums">läuft weiter bei 30 Sat</span>
+  </div>
+  <div style="display:flex;align-items:center;gap:14px;margin-top:20px">
+    <span class="btn btn-primary" style="font-size:15px;padding:9px 20px;white-space:nowrap;flex:none">Zurückschreiben und wechseln</span>
+    <span class="btn btn-secondary" style="font-size:14px;white-space:nowrap;flex:none">Abbrechen</span>
+  </div></div>
+</div>
+
+
+<div>
+<p class="dv-cap">Konflikt mit einem anderen Client (SFR-19, SUS-01-AC-7)</p>
+<div class="dialog" style="width:540px;padding:26px 28px;background:var(--color-bg);box-shadow:var(--shadow-lg);font-family:var(--font-body);color:var(--color-text)">
+  <div style="font-size:12px;text-transform:uppercase;letter-spacing:.12em;color:color-mix(in srgb,var(--color-text) 55%,transparent);color:var(--color-accent-2-700)">Konflikt</div>
+  <h3 style="margin:8px 0 8px;font-size:25px">Der Mint meldet „bereits ausgegeben"</h3>
+  <p style="margin:0 0 14px;font-size:15px;line-height:1.6;color:color-mix(in srgb,var(--color-text) 78%,transparent)">Wahrscheinlich hat ein anderer Client dieselbe Wallet benutzt. Der Wallet-Zustand wurde neu geladen. Es wurde kein Deletion-Event für die betroffenen Events publiziert.</p>
+  <div style="display:grid;grid-template-columns:190px minmax(0,1fr);gap:8px 22px;font-size:15px;padding:14px 0;border-top:1px solid var(--color-divider);border-bottom:1px solid var(--color-divider)">
+    <span style="color:color-mix(in srgb,var(--color-text) 72%,transparent)">Betroffen</span><span style="font-variant-numeric:tabular-nums">2 kind:7375-Events</span>
+    <span style="color:color-mix(in srgb,var(--color-text) 72%,transparent)">Neues Guthaben</span><span style="font-variant-numeric:tabular-nums">1.180 Sat</span>
+    <span style="color:color-mix(in srgb,var(--color-text) 72%,transparent)">Float</span><span style="font-variant-numeric:tabular-nums">unverändert 470 Sat</span>
+  </div>
+  <div style="display:flex;align-items:center;gap:14px;margin-top:20px">
+    <span class="btn btn-primary" style="font-size:15px;padding:9px 20px;white-space:nowrap;flex:none">Erneut versuchen</span>
+    <span class="btn btn-secondary" style="font-size:14px;white-space:nowrap;flex:none">Auf lokale Wallet wechseln</span>
+  </div></div>
+</div>
+
+
+<div>
+<p class="dv-cap">Beide Quellen nicht verfügbar (SFR-29, SUS-02-AC-4)</p>
+<div data-screen-label="5b Quellen gesperrt" style="width:540px;padding:26px 28px;background:var(--color-bg);box-shadow:var(--shadow-md);font-family:var(--font-body);color:var(--color-text)">
+  <h3 style="margin:0 0 4px;font-size:25px">Zahlungen sind deaktiviert</h3>
+  <p style="margin:0 0 18px;font-size:15px;line-height:1.6;color:color-mix(in srgb,var(--color-text) 78%,transparent)">Hören funktioniert uneingeschränkt weiter. Für jede Quelle steht einzeln, was fehlt.</p>
+  <div style="padding:14px 0;border-top:1px solid var(--color-divider)">
+    <div style="display:flex;align-items:baseline;gap:12px">
+      <span class="radio" style="opacity:.45"><span class="dot"></span></span>
+      <span style="font-family:var(--font-heading);font-weight:600;font-size:19px;color:color-mix(in srgb,var(--color-text) 60%,transparent)">nostr-Wallet (NIP-60)</span>
+      <span class="tag tag-accent-2" style="font-size:12px">Nicht wählbar</span>
+    </div>
+    <p style="margin:8px 0 0 28px;font-size:15px;line-height:1.6;color:color-mix(in srgb,var(--color-text) 78%,transparent)">Zu deinem npub wurde kein kind:17375 gefunden. Der Player legt keine Wallet an. Wenn du in einem anderen Client eine nostr-Wallet einrichtest, erscheint sie hier.</p>
+  </div>
+  <div style="padding:14px 0;border-top:1px solid var(--color-divider);border-bottom:1px solid var(--color-divider)">
+    <div style="display:flex;align-items:baseline;gap:12px">
+      <span class="radio" style="opacity:.45"><span class="dot"></span></span>
+      <span style="font-family:var(--font-heading);font-weight:600;font-size:19px;color:color-mix(in srgb,var(--color-text) 60%,transparent)">Lokale Wallet</span>
+      <span class="tag tag-accent-2" style="font-size:12px">Kein Guthaben</span>
+    </div>
+    <p style="margin:8px 0 0 28px;font-size:15px;line-height:1.6;color:color-mix(in srgb,var(--color-text) 78%,transparent)">Füge einen Cashu-Token von mint.minibits.cash oder mint.macadamia.cash ein, um zu zahlen.</p>
+    <div style="display:flex;align-items:center;gap:10px;margin:12px 0 0 28px">
+      <div class="input" style="flex:1;color:color-mix(in srgb,var(--color-text) 55%,transparent);font-size:14px">cashuA…</div>
+      <span class="btn btn-primary" style="font-size:14px;white-space:nowrap;flex:none">Aufladen</span>
+    </div>
+  </div>
+  <p style="margin:14px 0 0;font-size:14px;line-height:1.6;color:color-mix(in srgb,var(--color-text) 68%,transparent)">Weitere Gründe, die hier genauso erscheinen: die Extension bietet kein nip44, oder es gibt keinen gemeinsamen Mint zwischen deiner Wallet, der erlaubten Liste und Nodesignals kind:10019.</p></div>
+</div>
+
+
+<div>
+<p class="dv-cap">Rest aus der letzten Sitzung (SOQ-03)</p>
+<div data-screen-label="5b Float-Wiederherstellung" style="width:540px;padding:26px 28px;background:var(--color-bg);box-shadow:var(--shadow-md);font-family:var(--font-body);color:var(--color-text)">
+  <div style="font-size:12px;text-transform:uppercase;letter-spacing:.12em;color:color-mix(in srgb,var(--color-text) 55%,transparent)">Beim Öffnen der Seite</div>
+  <h3 style="margin:8px 0 8px;font-size:25px">248 Sat aus der letzten Sitzung liegen noch lokal</h3>
+  <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:color-mix(in srgb,var(--color-text) 78%,transparent)">Die Sitzung am 3. September wurde beendet, bevor der Float zurückgeschrieben werden konnte. Das Guthaben ist nicht verloren, aber bis zur Rückgabe nur hier sichtbar.</p>
+  <div style="display:grid;grid-template-columns:170px minmax(0,1fr);gap:8px 22px;font-size:15px;padding:14px 0;border-top:1px solid var(--color-divider);border-bottom:1px solid var(--color-divider)">
+    <span style="color:color-mix(in srgb,var(--color-text) 72%,transparent)">Rest</span><span style="font-variant-numeric:tabular-nums">248 Sat</span>
+    <span style="color:color-mix(in srgb,var(--color-text) 72%,transparent)">Mint</span><span>mint.minibits.cash</span>
+    <span style="color:color-mix(in srgb,var(--color-text) 72%,transparent)">Seit</span><span>3. September, 21:14</span>
+  </div>
+  <div style="display:flex;align-items:center;gap:14px;margin-top:18px">
+    <span class="btn btn-primary" style="font-size:15px;padding:9px 20px;white-space:nowrap;flex:none">Jetzt zurückschreiben</span>
+    <span class="btn btn-ghost" style="font-size:14px;white-space:nowrap;flex:none">Als Float weiterverwenden</span>
+  </div></div>
+</div>
+
+
+<div>
+<p class="dv-cap">Lokale Wallet exportieren (SFR-25)</p>
+<div class="dialog" style="width:540px;padding:26px 28px;background:var(--color-bg);box-shadow:var(--shadow-lg);font-family:var(--font-body);color:var(--color-text)">
+  <div style="font-size:12px;text-transform:uppercase;letter-spacing:.12em;color:color-mix(in srgb,var(--color-text) 55%,transparent)">Lokale Wallet</div>
+  <h3 style="margin:8px 0 8px;font-size:25px">300 Sat als Cashu-Token ausgeben</h3>
+  <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:color-mix(in srgb,var(--color-text) 78%,transparent)">Der Token ist in jeder Cashu-Wallet einlösbar. Er verlässt diesen Player endgültig — sichere ihn, bevor du das Fenster schließt.</p>
+  <div style="display:flex;gap:20px;align-items:flex-start">
+    <div style="width:118px;height:118px;flex:none;border:1px solid var(--color-divider);background:repeating-conic-gradient(var(--color-text) 0% 25%, transparent 0% 50%) 0 0/16px 16px;opacity:.85"></div>
+    <div style="flex:1;min-width:0">
+      <div class="input" style="height:78px;font-size:13px;word-break:break-all;color:color-mix(in srgb,var(--color-text) 78%,transparent)">cashuBo2FteHhodHRwczovL21pbnQubWluaWJpdHMuY2FzaC9CaXRjb2luYXVjc2F0YXSBomFpSAD5rbaJ…</div>
+      <div style="display:flex;align-items:center;gap:12px;margin-top:10px">
+        <span class="btn btn-secondary" style="font-size:14px;white-space:nowrap;flex:none"><i class="ph-duotone ph-copy"></i>Kopieren</span>
+        <span class="btn btn-ghost" style="font-size:14px;white-space:nowrap;flex:none">Als Datei speichern</span>
+      </div>
+    </div>
+  </div>
+  <p style="margin:16px 0 0;font-size:14px;line-height:1.6;color:color-mix(in srgb,var(--color-text) 68%,transparent)">Solange der Token nicht eingelöst wird, bleibt das Guthaben beim Mint. Löschen der Website-Daten vernichtet nur die lokale Kopie — nicht diesen Token.</p></div>
+</div>
+
+
+<div>
+<p class="dv-cap">Aufladen abgelehnt (SFR-24) · Untergrenze (SFR-27)</p>
+<div data-screen-label="5b Fehlerzustaende" style="width:540px;padding:26px 28px;background:var(--color-bg);box-shadow:var(--shadow-md);font-family:var(--font-body);color:var(--color-text)">
+  <h3 style="margin:0 0 14px;font-size:25px">Fehlertexte, wörtlich</h3>
+  <div style="display:flex;flex-direction:column;gap:0">
+    <div style="padding:12px 0;border-top:1px solid var(--color-divider)">
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:color-mix(in srgb,var(--color-text) 62%,transparent);color:var(--color-accent-2-700)">Nicht erlaubter Mint</div>
+      <p style="margin:6px 0 0;font-size:15px;line-height:1.6">Dieser Token stammt von mint.example.cash. Der Player nimmt nur Token von mint.minibits.cash und mint.macadamia.cash, weil Nodesignal nur diese akzeptiert.</p>
+    </div>
+    <div style="padding:12px 0;border-top:1px solid var(--color-divider)">
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:color-mix(in srgb,var(--color-text) 62%,transparent);color:var(--color-accent-2-700)">Bereits eingelöst</div>
+      <p style="margin:6px 0 0;font-size:15px;line-height:1.6">Der Mint kennt diese Proofs schon als ausgegeben. Der Token wurde bereits an einer anderen Stelle eingelöst.</p>
+    </div>
+    <div style="padding:12px 0;border-top:1px solid var(--color-divider)">
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:color-mix(in srgb,var(--color-text) 62%,transparent);color:var(--color-accent-2-700)">Ungültig</div>
+      <p style="margin:6px 0 0;font-size:15px;line-height:1.6">Das ist kein lesbarer Cashu-Token. Erwartet wird eine Zeichenkette, die mit cashuA oder cashuB beginnt.</p>
+    </div>
+    <div style="padding:12px 0;border-top:1px solid var(--color-divider)">
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:color-mix(in srgb,var(--color-text) 62%,transparent)">Speicher</div>
+      <p style="margin:6px 0 0;font-size:15px;line-height:1.6">Dauerhafter Speicher wurde vom Browser nicht zugesagt — Stand „best effort". Exportiere dein Guthaben, wenn du die Website-Daten löschst.</p>
+    </div>
+    <div style="padding:12px 0;border-top:1px solid var(--color-divider);border-bottom:1px solid var(--color-divider)">
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:color-mix(in srgb,var(--color-text) 62%,transparent);color:var(--color-accent-2-700)">Untergrenze erreicht</div>
+      <p style="margin:6px 0 0;font-size:15px;line-height:1.6">Unter 10 Sat wurde das Streaming aus der lokalen Wallet angehalten. Nach dem Aufladen läuft es an derselben Stelle weiter.</p>
+    </div>
+  </div></div>
+</div>
+
+
+<div>
+<p class="dv-cap">Ohne Anmeldung (SFR-12) · im iframe (SNR-05)</p>
+<div data-screen-label="5b Ohne Login" style="width:540px;padding:26px 28px;background:var(--color-bg);box-shadow:var(--shadow-md);font-family:var(--font-body);color:var(--color-text)">
+  <div style="display:flex;align-items:baseline;gap:20px">
+    <span style="font-family:var(--font-heading);font-weight:600;font-size:22px;letter-spacing:-0.02em">Nodesignal</span>
+    <span style="font-size:15px;color:color-mix(in srgb,var(--color-text) 72%,transparent)">Player</span>
+    <div style="flex:1"></div>
+    <span class="btn btn-primary" style="font-size:14px;white-space:nowrap;flex:none">Mit nostr anmelden</span>
+  </div>
+  <div style="height:3px;background:var(--color-text);margin-top:12px"></div>
+  <div style="display:flex;justify-content:space-between;padding:7px 0;font-size:12px;text-transform:uppercase;letter-spacing:.1em;color:color-mix(in srgb,var(--color-text) 62%,transparent)">
+    <span>Nicht angemeldet</span><span>Wiedergabe frei</span><span>Zahlungen aus</span>
+  </div>
+  <div style="height:1px;background:var(--color-divider)"></div>
+  <p style="margin:16px 0 0;font-size:15px;line-height:1.6;color:color-mix(in srgb,var(--color-text) 78%,transparent)">Alle Folgen lassen sich ohne Anmeldung hören. Zum Zahlen brauchst du eine nostr-Extension — sie dient der Identität, den Betrag bestimmst du selbst. <a href="#5a">Was ist das?</a></p>
+  <div style="margin-top:20px;padding-top:14px;border-top:1px solid var(--color-divider)">
+    <div style="font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:color-mix(in srgb,var(--color-text) 62%,transparent);color:var(--color-accent-2-700)">Einbettung erkannt</div>
+    <p style="margin:6px 0 0;font-size:15px;line-height:1.6">Der Player läuft in einem iframe. Der Wallet-Betrieb ist deshalb abgeschaltet. Öffne player.nodesignal.space direkt.</p>
+    <div style="margin-top:12px"><span class="btn btn-secondary" style="font-size:14px;white-space:nowrap;flex:none">Im eigenen Fenster öffnen</span></div>
+  </div></div>
+</div>
+
+</div>
+</div>
+
+</div>
+
+<p class="dv-next">Turn 4 below is the earlier single-source wallet; it is superseded by <a href="#5a">5a</a>. Try next: "add the Verlauf filtered to Float only" · "show the Einstellungen with the float slider open" · "draw the mobile width of 5a"</p>
+</section>
+
+<section class="dv-turn" id="t4">
+<div class="dv-thd"><a class="dv-tid" href="#t4">4</a><span class="dv-tname">Wallet — Aufladen, Export, Mints, Nutzap senden</span></div>
+
+<div style="max-width:1180px;margin:0 0 34px">
+<p style="margin:0;font-size:12px;text-transform:uppercase;letter-spacing:.12em;color:color-mix(in srgb,var(--color-text) 55%,transparent)">What the wallet has to do, given nutzaps only go one way</p>
+<p style="margin:8px 0 0;font-size:16px;line-height:1.6;max-width:76ch">Money enters the wallet in exactly one way — you paste in a Cashu token — and leaves in two: as a nutzap to a podcast, or exported back out as a token. There is no receiving address to publish and no inbox to clear, so the page is a balance, those two doors, and the mints the balance sits at. The mint detail stays prominent because it is the part that carries risk: a token is a claim on one specific mint, and sending needs a mint the recipient actually lists. The npub is identity only; the balance lives on this device.</p>
+</div>
+
+<div class="dv-opts">
+
+<div class="dv-opt" id="4a">
+<div class="dv-olabel"><a class="dv-oid" href="#4a">4a</a>Wallet page — Guthaben, Aufladen, Export, Mints, Verlauf</div>
+<div class="dv-frames" style="grid-template-columns:1120px">
+
+<div>
+<p class="dv-cap">Wallet</p>
+<div data-screen-label="4a Wallet" style="width:1120px;height:1010px;display:flex;flex-direction:column;background:var(--color-bg);color:var(--color-text);font-family:var(--font-body);box-shadow:var(--shadow-md);overflow:hidden">
+  <div style="flex:none;padding:22px 40px 0">
+    <div style="display:flex;align-items:baseline;gap:28px">
+      <span style="font-family:var(--font-heading);font-weight:600;font-size:24px;letter-spacing:-0.02em">Cashu Player</span>
+      <span style="font-size:16px;color:color-mix(in srgb,var(--color-text) 72%,transparent)">Hören</span>
+      <span style="font-family:var(--font-heading);font-weight:600;font-size:16px;color:var(--color-accent-700)">Wallet</span>
+      <span style="font-size:16px;color:color-mix(in srgb,var(--color-text) 72%,transparent)">Einstellungen</span>
+      <div style="flex:1"></div>
+      <span style="font-size:14px;font-variant-numeric:tabular-nums;color:color-mix(in srgb,var(--color-text) 70%,transparent)">npub1l2v…p3afq</span>
+    </div>
+    <div style="height:3px;background:var(--color-text);margin-top:14px"></div>
+    <div style="display:flex;justify-content:space-between;padding:7px 0;font-size:12px;text-transform:uppercase;letter-spacing:.1em;color:color-mix(in srgb,var(--color-text) 62%,transparent)">
+      <span>2 Mints</span>
+      <span>Nur auf diesem Gerät gespeichert</span>
+      <span>npub dient der Identität, nicht der Verwahrung</span>
+    </div>
+    <div style="height:1px;background:var(--color-divider)"></div>
+  </div>
+
+  <div style="flex:1;min-height:0;padding:30px 40px 0">
+    <div style="display:flex;align-items:baseline;gap:16px">
+      <span style="font-family:var(--font-heading);font-weight:600;font-size:72px;line-height:0.9;letter-spacing:-0.03em;font-variant-numeric:tabular-nums">12.480</span>
+      <span style="font-family:var(--font-heading);font-weight:600;font-size:26px">Sat</span>
+      <span style="font-size:14px;color:color-mix(in srgb,var(--color-text) 62%,transparent)">verfügbar für Nutzaps</span>
+    </div>
+
+    <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:56px;margin-top:28px">
+      <div>
+        <h3 style="margin:0 0 6px;font-size:25px">Aufladen</h3>
+        <p style="margin:0 0 12px;font-size:14px;line-height:1.6;color:color-mix(in srgb,var(--color-text) 68%,transparent)">Füge einen Cashu-Token ein, lautend auf Sat. Ein Token eines fremden Mints lässt sich einlösen, sobald du dem Mint vertraust.</p>
+        <div class="input" style="height:76px;color:color-mix(in srgb,var(--color-text) 55%,transparent);font-size:14px">cashuA…</div>
+        <div style="display:flex;align-items:center;gap:14px;margin-top:12px">
+          <span class="btn btn-primary" style="font-size:14px;white-space:nowrap;flex:none">Aufladen</span>
+          <span class="btn btn-ghost" style="font-size:14px;white-space:nowrap;flex:none"><i class="ph-duotone ph-clipboard"></i>Aus Zwischenablage</span>
+        </div>
+      </div>
+      <div>
+        <h3 style="margin:0 0 6px;font-size:25px">Export</h3>
+        <p style="margin:0 0 12px;font-size:14px;line-height:1.6;color:color-mix(in srgb,var(--color-text) 68%,transparent)">Gib einen Betrag als Cashu-Token aus, einlösbar in jeder Wallet. Der Token entsteht beim gewählten Mint und verlässt diese Wallet endgültig.</p>
+        <div style="display:flex;gap:10px;align-items:center;margin-bottom:12px">
+          <div class="input" style="width:150px;font-size:15px;font-variant-numeric:tabular-nums">2.500</div>
+          <span style="font-size:14px;color:color-mix(in srgb,var(--color-text) 62%,transparent)">Sat von</span>
+          <span class="tag tag-outline" style="font-size:13px">mint.minibits.cash</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:14px">
+          <span class="btn btn-secondary" style="font-size:14px;white-space:nowrap;flex:none">Token erzeugen</span>
+          <span class="btn btn-ghost" style="font-size:14px;white-space:nowrap;flex:none">Gesamtes Guthaben</span>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:30px;padding-top:20px;border-top:1px solid var(--color-divider)">
+      <div style="display:flex;align-items:baseline;justify-content:space-between;gap:24px">
+        <h3 style="margin:0;font-size:25px">Mints</h3>
+        <span class="btn btn-ghost" style="font-size:14px;white-space:nowrap;flex:none">Mint hinzufügen</span>
+      </div>
+      <p style="margin:6px 0 12px;font-size:15px;line-height:1.6;max-width:80ch;color:color-mix(in srgb,var(--color-text) 78%,transparent)">Dein Guthaben ist eine Forderung gegen den jeweiligen Mint. Ein Nutzap kann nur von einem Mint gesendet werden, den der Podcast auch akzeptiert.</p>
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) 130px 100px 190px 110px;gap:0 24px;padding:0 0 8px;font-size:12px;text-transform:uppercase;letter-spacing:.1em;color:color-mix(in srgb,var(--color-text) 55%,transparent);border-bottom:1px solid var(--color-divider)">
+        <span>Mint</span><span>Guthaben</span><span>Einheit</span><span>Keyset</span><span>Status</span>
+      </div>
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) 130px 100px 190px 110px;align-items:baseline;gap:0 24px;padding:12px 0;border-bottom:1px solid var(--color-divider);font-size:15px">
+        <span>mint.minibits.cash<span style="color:color-mix(in srgb,var(--color-text) 60%,transparent)"> · Standard zum Senden</span></span>
+        <span style="font-variant-numeric:tabular-nums">9.980 Sat</span>
+        <span>sat</span>
+        <span style="font-variant-numeric:tabular-nums;color:color-mix(in srgb,var(--color-text) 65%,transparent)">00ad268c4d1f5826</span>
+        <span style="color:var(--color-accent-700)">Erreichbar</span>
+      </div>
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) 130px 100px 190px 110px;align-items:baseline;gap:0 24px;padding:12px 0;border-bottom:1px solid var(--color-divider);font-size:15px">
+        <span>mint.macadamia.cash</span>
+        <span style="font-variant-numeric:tabular-nums">2.500 Sat</span>
+        <span>sat</span>
+        <span style="font-variant-numeric:tabular-nums;color:color-mix(in srgb,var(--color-text) 65%,transparent)">009a1f293253e41e</span>
+        <span style="color:var(--color-accent-700)">Erreichbar</span>
+      </div>
+    </div>
+
+    <div style="margin-top:26px">
+      <div style="display:flex;align-items:baseline;gap:20px">
+        <h3 style="margin:0;font-size:25px">Verlauf</h3>
+        <div style="display:flex;gap:8px">
+          <span class="tag" style="font-size:13px;background:var(--color-accent);color:var(--color-bg);border:1px solid var(--color-accent)">Alle</span>
+          <span class="tag tag-outline" style="font-size:13px">Aufladen</span>
+          <span class="tag tag-outline" style="font-size:13px">Nutzap</span>
+          <span class="tag tag-outline" style="font-size:13px">Export</span>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:120px 120px 180px minmax(0,1fr) 190px;gap:0 24px;padding:12px 0 8px;font-size:12px;text-transform:uppercase;letter-spacing:.1em;color:color-mix(in srgb,var(--color-text) 55%,transparent);border-bottom:1px solid var(--color-divider)">
+        <span>Betrag</span><span>Wann</span><span>Art</span><span>Podcast · Episode</span><span>Mint</span>
+      </div>
+      <div style="display:grid;grid-template-columns:120px 120px 180px minmax(0,1fr) 190px;align-items:baseline;gap:0 24px;padding:11px 0;border-bottom:1px solid var(--color-divider);font-size:15px">
+        <span style="font-variant-numeric:tabular-nums">−500 Sat</span><span style="color:color-mix(in srgb,var(--color-text) 65%,transparent)">vor 5 Std.</span><span>Nutzap gesendet</span><span>The Mint · Folge 84</span><span style="color:color-mix(in srgb,var(--color-text) 65%,transparent)">mint.minibits.cash</span>
+      </div>
+      <div style="display:grid;grid-template-columns:120px 120px 180px minmax(0,1fr) 190px;align-items:baseline;gap:0 24px;padding:11px 0;border-bottom:1px solid var(--color-divider);font-size:15px">
+        <span style="font-variant-numeric:tabular-nums">−475 Sat</span><span style="color:color-mix(in srgb,var(--color-text) 65%,transparent)">gestern</span><span>Nutzap gesendet</span><span>Signal &amp; Noise · Folge 118</span><span style="color:color-mix(in srgb,var(--color-text) 65%,transparent)">mint.minibits.cash</span>
+      </div>
+      <div style="display:grid;grid-template-columns:120px 120px 180px minmax(0,1fr) 190px;align-items:baseline;gap:0 24px;padding:11px 0;border-bottom:1px solid var(--color-divider);font-size:15px">
+        <span style="font-variant-numeric:tabular-nums">−2.500 Sat</span><span style="color:color-mix(in srgb,var(--color-text) 65%,transparent)">1. Sept.</span><span>Token exportiert</span><span style="color:color-mix(in srgb,var(--color-text) 65%,transparent)">—</span><span style="color:color-mix(in srgb,var(--color-text) 65%,transparent)">mint.macadamia.cash</span>
+      </div>
+      <div style="display:grid;grid-template-columns:120px 120px 180px minmax(0,1fr) 190px;align-items:baseline;gap:0 24px;padding:11px 0;font-size:15px">
+        <span style="font-variant-numeric:tabular-nums">+10.000 Sat</span><span style="color:color-mix(in srgb,var(--color-text) 65%,transparent)">30. Aug.</span><span>Aufgeladen</span><span style="color:color-mix(in srgb,var(--color-text) 65%,transparent)">—</span><span style="color:color-mix(in srgb,var(--color-text) 65%,transparent)">mint.minibits.cash</span>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+</div>
+</div>
+
+<div class="dv-opt" id="4b">
+<div class="dv-olabel"><a class="dv-oid" href="#4b">4b</a>Senden — the sheet the Boost button opens over the player</div>
+<div class="dv-frames" style="grid-template-columns:680px">
+
+<div>
+<p class="dv-cap">Nutzap senden</p>
+<div class="dialog" style="width:680px;padding:32px 34px;background:var(--color-bg);box-shadow:var(--shadow-lg);font-family:var(--font-body)">
+  <p style="margin:0;font-size:12px;text-transform:uppercase;letter-spacing:.12em;color:color-mix(in srgb,var(--color-text) 55%,transparent)">Signal &amp; Noise · Folge 118</p>
+  <h3 style="margin:6px 0 0;font-size:25px">Nutzap senden</h3>
+  <p style="margin:8px 0 22px;font-size:15px;line-height:1.6;color:color-mix(in srgb,var(--color-text) 78%,transparent)">Der Betrag geht als Cashu-Token an die Empfänger dieser Folge, gesperrt auf ihre Schlüssel. Dein Kommentar wird öffentlich auf nostr veröffentlicht.</p>
+
+  <div style="display:flex;gap:10px;align-items:center">
+    <span class="tag tag-outline" style="font-size:14px">100</span>
+    <span class="tag" style="font-size:14px;font-weight:600;background:var(--color-accent);color:var(--color-bg);border:1px solid var(--color-accent)">500</span>
+    <span class="tag tag-outline" style="font-size:14px">2.100</span>
+    <span class="tag tag-outline" style="font-size:14px">10.000</span>
+    <span style="font-size:14px;color:color-mix(in srgb,var(--color-text) 62%,transparent)">Sat · frei wählbar</span>
+  </div>
+  <div class="input" style="margin-top:16px;height:64px;font-size:15px;color:color-mix(in srgb,var(--color-text) 55%,transparent)">Kommentar (öffentlich)</div>
+
+  <p style="margin:24px 0 0;font-size:12px;text-transform:uppercase;letter-spacing:.12em;color:color-mix(in srgb,var(--color-text) 55%,transparent)">Aufteilung</p>
+  <div style="display:grid;grid-template-columns:minmax(0,1fr) 90px 150px;align-items:baseline;gap:0 18px;padding:11px 0;border-top:1px solid var(--color-divider);margin-top:10px">
+    <span style="font-size:16px">Signal &amp; Noise <span style="color:color-mix(in srgb,var(--color-text) 62%,transparent)">· Host</span></span>
+    <span style="font-size:15px;font-variant-numeric:tabular-nums">400 Sat</span>
+    <span style="font-size:14px;color:var(--color-accent-700)">Nutzap möglich</span>
+  </div>
+  <div style="display:grid;grid-template-columns:minmax(0,1fr) 90px 150px;align-items:baseline;gap:0 18px;padding:11px 0;border-top:1px solid var(--color-divider)">
+    <span style="font-size:16px">Ana Sørensen <span style="color:color-mix(in srgb,var(--color-text) 62%,transparent)">· Gast</span></span>
+    <span style="font-size:15px;font-variant-numeric:tabular-nums">75 Sat</span>
+    <span style="font-size:14px;color:var(--color-accent-700)">Nutzap möglich</span>
+  </div>
+  <div style="display:grid;grid-template-columns:minmax(0,1fr) 90px 150px;align-items:baseline;gap:0 18px;padding:11px 0;border-top:1px solid var(--color-divider);border-bottom:1px solid var(--color-divider)">
+    <span style="font-size:16px">Cashu Player <span style="color:color-mix(in srgb,var(--color-text) 62%,transparent)">· App</span></span>
+    <span style="font-size:15px;font-variant-numeric:tabular-nums">25 Sat</span>
+    <span style="font-size:14px;color:var(--color-accent-2-700)">Keine Adresse</span>
+  </div>
+  <p style="margin:12px 0 0;font-size:14px;line-height:1.6;color:color-mix(in srgb,var(--color-text) 72%,transparent)">Für <span class="strong">Cashu Player</span> ist keine Empfangsadresse auf nostr hinterlegt. Dieser Anteil bleibt in deiner Wallet — oder du sendest ihn per Lightning.</p>
+  <p style="margin:10px 0 0;font-size:14px;color:color-mix(in srgb,var(--color-text) 72%,transparent)">Gesendet vom Mint <span class="strong">mint.minibits.cash</span> — von beiden Empfängern akzeptiert.</p>
+
+  <div style="display:flex;align-items:center;gap:14px;margin-top:26px">
+    <span class="btn btn-primary" style="font-size:15px;padding:9px 20px;white-space:nowrap;flex:none"><i class="ph-duotone ph-lightning"></i>475 Sat senden</span>
+    <span class="btn btn-secondary" style="font-size:15px;white-space:nowrap;flex:none">Abbrechen</span>
+    <span style="font-size:14px;color:color-mix(in srgb,var(--color-text) 62%,transparent)">Verbleibend: 12.005 Sat</span>
+  </div>
+</div>
+</div>
+
+<div>
+<p class="dv-cap">Gesendet</p>
+<div class="dialog" style="width:680px;padding:32px 34px;background:var(--color-bg);box-shadow:var(--shadow-lg);font-family:var(--font-body)">
+  <p style="margin:0;font-size:12px;text-transform:uppercase;letter-spacing:.12em;color:var(--color-accent-700)">Gesendet</p>
+  <h3 style="margin:6px 0 0;font-size:25px">475 Sat unterwegs</h3>
+  <p style="margin:8px 0 20px;font-size:15px;line-height:1.6;max-width:60ch;color:color-mix(in srgb,var(--color-text) 80%,transparent)">Die Token sind auf die Schlüssel der Empfänger gesperrt und liegen beim Mint, bis sie eingelöst werden. Die Zahlung ist ihr eigener Beleg — es gibt nichts zu bestätigen.</p>
+  <div style="display:grid;grid-template-columns:200px minmax(0,1fr);align-items:baseline;gap:8px 24px;font-size:15px">
+    <span style="color:color-mix(in srgb,var(--color-text) 62%,transparent)">Empfänger</span><span>Signal &amp; Noise (400 Sat) · Ana Sørensen (75 Sat)</span>
+    <span style="color:color-mix(in srgb,var(--color-text) 62%,transparent)">Mint</span><span style="font-variant-numeric:tabular-nums">mint.minibits.cash</span>
+    <span style="color:color-mix(in srgb,var(--color-text) 62%,transparent)">Veröffentlicht auf</span><span style="font-variant-numeric:tabular-nums">wss://relay.damus.io · wss://nos.lol</span>
+    <span style="color:color-mix(in srgb,var(--color-text) 62%,transparent)">In deiner Wallet geblieben</span><span>25 Sat (Anteil Cashu Player)</span>
+  </div>
+  <div style="display:flex;align-items:center;gap:14px;margin-top:26px">
+    <span class="btn btn-secondary" style="font-size:15px;white-space:nowrap;flex:none">Fertig</span>
+    <span class="btn btn-ghost" style="font-size:15px;white-space:nowrap;flex:none">Im Verlauf ansehen</span>
+  </div>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+
+<p class="dv-next">Try next: "add the empty wallet / first-run state" · "show the Aufladen error when the token comes from an unknown mint" · "translate turns 2 and 3 into German too"</p>
+</section>
+
+<section class="dv-turn" id="t3">
+<div class="dv-thd"><a class="dv-tid" href="#t3">3</a><span class="dv-tname">Full-screen episode player</span></div>
+
+<div class="dv-opts">
+<div class="dv-opt" id="3a">
+<div class="dv-olabel"><a class="dv-oid" href="#3a">3a</a>Reached from the bottom strip or from any episode tile — the strip's chevron becomes the collapse control</div>
+<div class="dv-frames" style="grid-template-columns:1120px">
+
+<div>
+<p class="dv-cap">Now playing · full screen</p>
+<div data-screen-label="3a Player" style="width:1120px;height:1010px;display:flex;flex-direction:column;background:var(--color-bg);color:var(--color-text);font-family:var(--font-body);box-shadow:var(--shadow-md);overflow:hidden">
+  <div style="flex:none;padding:22px 40px 0">
+    <div style="display:flex;align-items:center;gap:16px">
+      <span class="btn btn-icon btn-ghost" style="font-size:22px;flex:none"><i class="ph-duotone ph-caret-down"></i></span>
+      <span style="font-size:12px;text-transform:uppercase;letter-spacing:.12em;color:color-mix(in srgb,var(--color-text) 55%,transparent)">Now playing</span>
+      <div style="flex:1"></div>
+      <span class="btn btn-ghost" style="font-size:14px;white-space:nowrap;flex:none"><i class="ph-duotone ph-queue"></i>Up next · 4</span>
+      <span class="btn btn-icon btn-ghost" style="font-size:20px;flex:none"><i class="ph-duotone ph-dots-three"></i></span>
+    </div>
+    <div style="height:3px;background:var(--color-text);margin-top:14px"></div>
+    <div style="display:flex;justify-content:space-between;padding:7px 0;font-size:12px;text-transform:uppercase;letter-spacing:.1em;color:color-mix(in srgb,var(--color-text) 62%,transparent)">
+      <span>Signal &amp; Noise</span>
+      <span>Episode 118 · 28 August</span>
+      <span>1 h 03 total</span>
+    </div>
+    <div style="height:1px;background:var(--color-divider)"></div>
+  </div>
+
+  <div style="flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;padding:24px 40px 0">
+    <div class="halftone" style="width:260px;height:260px;flex:none"><image-slot id="3a-cover" shape="rect" placeholder="Episode art"></image-slot></div>
+    <span style="margin-top:20px;font-size:12px;text-transform:uppercase;letter-spacing:.12em;color:color-mix(in srgb,var(--color-text) 62%,transparent)">Signal &amp; Noise · Episode 118</span>
+    <h2 style="margin:6px 0 0;font-size:28px;text-align:center;max-width:34ch">Ecash, mints and the trust you can't avoid</h2>
+
+    <div style="width:100%;max-width:760px;margin-top:24px;display:flex;align-items:center;gap:18px">
+      <span style="font-size:14px;font-variant-numeric:tabular-nums;color:color-mix(in srgb,var(--color-text) 65%,transparent)">21:14</span>
+      <div style="flex:1;height:2px;background:var(--color-neutral-300);position:relative"><div style="position:absolute;left:0;top:0;bottom:0;width:34%;background:var(--color-accent)"></div><div style="position:absolute;left:34%;top:-4px;width:10px;height:10px;border-radius:50%;background:var(--color-accent)"></div></div>
+      <span style="font-size:14px;font-variant-numeric:tabular-nums;color:color-mix(in srgb,var(--color-text) 65%,transparent)">42:07 left</span>
+    </div>
+
+    <div style="display:flex;align-items:center;justify-content:center;gap:24px;margin-top:14px">
+      <span style="font-size:14px;font-variant-numeric:tabular-nums;color:color-mix(in srgb,var(--color-text) 72%,transparent);width:34px;text-align:right">1.2×</span>
+      <i class="ph-duotone ph-skip-back" style="font-size:24px"></i>
+      <i class="ph-duotone ph-arrow-counter-clockwise" style="font-size:21px;color:color-mix(in srgb,var(--color-text) 78%,transparent)"></i>
+      <i class="ph-duotone ph-pause-circle" style="font-size:58px;color:var(--color-accent-700)"></i>
+      <i class="ph-duotone ph-arrow-clockwise" style="font-size:21px;color:color-mix(in srgb,var(--color-text) 78%,transparent)"></i>
+      <i class="ph-duotone ph-skip-forward" style="font-size:24px"></i>
+      <i class="ph-duotone ph-moon" style="font-size:20px;color:color-mix(in srgb,var(--color-text) 72%,transparent)"></i>
+      <i class="ph-duotone ph-download-simple" style="font-size:20px;color:color-mix(in srgb,var(--color-text) 72%,transparent)"></i>
+    </div>
+
+    <sc-if value="{{ value }}" hint-placeholder-val="{{ true }}">
+    <div style="display:flex;align-items:center;gap:16px;margin-top:16px">
+      <span style="font-size:14px;font-variant-numeric:tabular-nums;color:color-mix(in srgb,var(--color-text) 70%,transparent)">Streaming 47 sats/min · 1,240 sent</span>
+      <span class="btn btn-primary" style="font-size:14px;padding:7px 16px;white-space:nowrap;flex:none"><i class="ph-duotone ph-lightning"></i>Boost</span>
+    </div>
+    </sc-if>
+
+    <div style="width:100%;max-width:900px;margin-top:26px;padding-top:22px;border-top:1px solid var(--color-divider);display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:44px">
+      <div>
+        <p style="margin:0;font-size:12px;text-transform:uppercase;letter-spacing:.12em;color:color-mix(in srgb,var(--color-text) 55%,transparent)">Episode notes</p>
+        <p style="margin:10px 0 0;font-size:16px;line-height:1.6;max-width:58ch;color:color-mix(in srgb,var(--color-text) 84%,transparent)">Why a mint is still a custodian, and what that costs you in practice. We walk through three failure modes that have nothing to do with cryptography, and what a careful user can actually do about each one.</p>
+        <p style="margin:10px 0 0;font-size:14px;line-height:1.6;color:color-mix(in srgb,var(--color-text) 65%,transparent)">With Ana Sørensen, mint operator · Recorded in Lisbon · <span style="color:var(--color-accent-700)">Transcript</span></p>
+      </div>
+      <div>
+        <p style="margin:0;font-size:12px;text-transform:uppercase;letter-spacing:.12em;color:color-mix(in srgb,var(--color-text) 55%,transparent)">Chapters</p>
+        <div style="display:grid;grid-template-columns:56px minmax(0,1fr);align-items:baseline;gap:0 14px;padding:9px 0;border-top:1px solid var(--color-divider);margin-top:10px">
+          <span style="font-size:13px;font-variant-numeric:tabular-nums;color:color-mix(in srgb,var(--color-text) 62%,transparent)">04:12</span>
+          <span style="font-size:15px;color:color-mix(in srgb,var(--color-text) 70%,transparent)">What a mint actually holds</span>
+        </div>
+        <div style="display:grid;grid-template-columns:56px minmax(0,1fr);align-items:baseline;gap:0 14px;padding:9px 0;border-top:1px solid var(--color-divider)">
+          <span style="font-size:13px;font-variant-numeric:tabular-nums;color:var(--color-accent-700)">21:40</span>
+          <span style="font-family:var(--font-heading);font-weight:600;font-size:15px;color:var(--color-accent-700)">The trust you can't avoid</span>
+        </div>
+        <div style="display:grid;grid-template-columns:56px minmax(0,1fr);align-items:baseline;gap:0 14px;padding:9px 0;border-top:1px solid var(--color-divider)">
+          <span style="font-size:13px;font-variant-numeric:tabular-nums;color:color-mix(in srgb,var(--color-text) 62%,transparent)">38:05</span>
+          <span style="font-size:15px;color:color-mix(in srgb,var(--color-text) 70%,transparent)">Listener questions</span>
+        </div>
+        <div style="display:grid;grid-template-columns:56px minmax(0,1fr);align-items:baseline;gap:0 14px;padding:9px 0;border-top:1px solid var(--color-divider)">
+          <span style="font-size:13px;font-variant-numeric:tabular-nums;color:color-mix(in srgb,var(--color-text) 62%,transparent)">55:30</span>
+          <span style="font-size:15px;color:color-mix(in srgb,var(--color-text) 70%,transparent)">Where this goes next</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+</div>
+</div>
+</div>
+
+<p class="dv-next">Try next: "open the transcript beside the chapters" · "show the collapsed strip mid-expand" · "put the boost control in the transport row instead"</p>
+</section>
+
+<section class="dv-turn" id="t2">
+<div class="dv-thd"><a class="dv-tid" href="#t2">2</a><span class="dv-tname">Subscribed-podcast navigation, reset onto Broadsheet</span></div>
+
+<div style="display:flex;gap:48px;align-items:flex-start;margin:0 0 36px;max-width:1180px">
+<div style="flex:1">
+<p style="margin:0;font-size:12px;text-transform:uppercase;letter-spacing:.12em;color:color-mix(in srgb,var(--color-text) 55%,transparent)">Same structure, new ink</p>
+<p style="margin:8px 0 0;font-size:16px;line-height:1.6;max-width:64ch">The layout is unchanged: eight subscriptions, one pane, a <em>Shows ⇄ Episodes</em> toggle that swaps the whole pane, an expanding search field and a persistent player strip. What changed is the surface. Paper instead of forest green, Source Serif throughout, cyan for anything you can act on, and magenta held back for one job only — marking a show or episode as new.</p>
+</div>
+<div style="flex:0 0 300px">
+<p style="margin:0;font-size:12px;text-transform:uppercase;letter-spacing:.12em;color:color-mix(in srgb,var(--color-text) 55%,transparent)">Two carried-over calls</p>
+<p style="margin:8px 0 0;font-size:14px;line-height:1.6;color:color-mix(in srgb,var(--color-text) 78%,transparent)">Episode rows lost their thumbnails: the show name now reads as a newspaper kicker over the headline, which suits the serif better than a grid of small squares. Covers print as halftones — drag your own art onto any of them.</p>
+</div>
+</div>
+
+<div class="dv-opts">
+
+<div class="dv-opt" id="2a">
+<div class="dv-olabel"><a class="dv-oid" href="#2a">2a</a>Masthead toggle — the pane is the whole page</div>
+<div class="dv-frames">
+
+<div>
+<p class="dv-cap">Library · Shows</p>
+<div data-screen-label="2a Shows" style="width:1120px;height:1010px;display:flex;flex-direction:column;background:var(--color-bg);color:var(--color-text);font-family:var(--font-body);box-shadow:var(--shadow-md);overflow:hidden">
+  
+  <div style="flex:none;padding:22px 40px 0">
+    <div style="display:flex;align-items:baseline;gap:24px">
+      <span style="font-family:var(--font-heading);font-weight:600;font-size:26px;letter-spacing:-0.02em">Podcasts</span>
+      <div style="flex:1;display:flex;justify-content:center">
+        <div class="seg" style="font-size:14px">
+          <span class="seg-opt" style="padding:6px 20px;background:var(--color-accent);color:var(--color-bg);font-weight:600">Shows</span>
+          <span class="seg-opt" style="padding:6px 20px;color:color-mix(in srgb,var(--color-text) 70%,transparent)">Episodes</span>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:14px">
+        <i class="ph-duotone ph-magnifying-glass" style="font-size:20px;color:var(--color-accent-700)"></i>
+        <span style="font-size:14px;color:color-mix(in srgb,var(--color-text) 70%,transparent)">A. Kellner</span>
+      </div>
+    </div>
+    <div style="height:3px;background:var(--color-text);margin-top:14px"></div>
+    <div style="display:flex;justify-content:space-between;padding:7px 0;font-size:12px;text-transform:uppercase;letter-spacing:.1em;color:color-mix(in srgb,var(--color-text) 62%,transparent)">
+      <span>Tuesday, 2 September</span>
+      <span>8 subscriptions · 4 with new episodes</span>
+      <span>Recently updated</span>
+    </div>
+    <div style="height:1px;background:var(--color-divider)"></div>
+  </div>
+
+  <div style="flex:1;overflow:hidden;padding:26px 40px 0">
+    <div style="display:flex;align-items:baseline;justify-content:space-between;margin:0 0 20px">
+      <h3 style="margin:0;font-size:25px">Subscriptions</h3>
+      <sc-if value="{{ manage }}" hint-placeholder-val="{{ true }}"><span class="btn btn-ghost" style="font-size:14px;white-space:nowrap;flex:none">Manage subscriptions</span></sc-if>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,286px);gap:26px 30px">
+      <div>
+        <div class="halftone" style="width:100%;aspect-ratio:1/1;margin:0 0 11px"><image-slot id="2a-cover-1" shape="rect" placeholder="Signal &amp; Noise"></image-slot></div>
+        <div style="display:flex;align-items:baseline;gap:8px">
+          <sc-if value="{{ markers }}" hint-placeholder-val="{{ true }}"><span style="width:7px;height:7px;border-radius:50%;background:var(--color-accent-2);flex:none"></span></sc-if>
+          <span style="font-family:var(--font-heading);font-weight:600;font-size:18px">Signal &amp; Noise</span>
+        </div>
+        <div style="font-size:14px;color:color-mix(in srgb,var(--color-text) 68%,transparent);margin-top:2px">3 new · 42 min left in progress</div>
+      </div>
+      <div>
+        <div class="halftone" style="width:100%;aspect-ratio:1/1;margin:0 0 11px"><image-slot id="2a-cover-2" shape="rect" placeholder="The Mint"></image-slot></div>
+        <div style="display:flex;align-items:baseline;gap:8px">
+          <sc-if value="{{ markers }}" hint-placeholder-val="{{ true }}"><span style="width:7px;height:7px;border-radius:50%;background:var(--color-accent-2);flex:none"></span></sc-if>
+          <span style="font-family:var(--font-heading);font-weight:600;font-size:18px">The Mint</span>
+        </div>
+        <div style="font-size:14px;color:color-mix(in srgb,var(--color-text) 68%,transparent);margin-top:2px">1 new · weekly</div>
+      </div>
+      <div>
+        <div class="halftone" style="width:100%;aspect-ratio:1/1;margin:0 0 11px"><image-slot id="2a-cover-3" shape="rect" placeholder="Hard Money Weekly"></image-slot></div>
+        <div style="display:flex;align-items:baseline;gap:8px">
+          <sc-if value="{{ markers }}" hint-placeholder-val="{{ true }}"><span style="width:7px;height:7px;border-radius:50%;background:var(--color-accent-2);flex:none"></span></sc-if>
+          <span style="font-family:var(--font-heading);font-weight:600;font-size:18px">Hard Money Weekly</span>
+        </div>
+        <div style="font-size:14px;color:color-mix(in srgb,var(--color-text) 68%,transparent);margin-top:2px">2 new · weekly</div>
+      </div>
+      <div>
+        <div class="halftone" style="width:100%;aspect-ratio:1/1;margin:0 0 11px"><image-slot id="2a-cover-4" shape="rect" placeholder="Nodes &amp; Nostr"></image-slot></div>
+        <div style="font-family:var(--font-heading);font-weight:600;font-size:18px">Nodes &amp; Nostr</div>
+        <div style="font-size:14px;color:color-mix(in srgb,var(--color-text) 68%,transparent);margin-top:2px">All played · fortnightly</div>
+      </div>
+      <div>
+        <div class="halftone" style="width:100%;aspect-ratio:1/1;margin:0 0 11px"><image-slot id="2a-cover-5" shape="rect" placeholder="Sovereign Stack"></image-slot></div>
+        <div style="display:flex;align-items:baseline;gap:8px">
+          <sc-if value="{{ markers }}" hint-placeholder-val="{{ true }}"><span style="width:7px;height:7px;border-radius:50%;background:var(--color-accent-2);flex:none"></span></sc-if>
+          <span style="font-family:var(--font-heading);font-weight:600;font-size:18px">Sovereign Stack</span>
+        </div>
+        <div style="font-size:14px;color:color-mix(in srgb,var(--color-text) 68%,transparent);margin-top:2px">1 new · weekly</div>
+      </div>
+      <div>
+        <div class="halftone" style="width:100%;aspect-ratio:1/1;margin:0 0 11px"><image-slot id="2a-cover-6" shape="rect" placeholder="Layer Two Lounge"></image-slot></div>
+        <div style="font-family:var(--font-heading);font-weight:600;font-size:18px">Layer Two Lounge</div>
+        <div style="font-size:14px;color:color-mix(in srgb,var(--color-text) 68%,transparent);margin-top:2px">All played · monthly</div>
+      </div>
+    </div>
+  </div>
+
+  
+  <div style="flex:none;border-top:1px solid var(--color-divider);display:flex;align-items:center;gap:28px;height:78px;padding:0 40px;background:var(--color-neutral-100)">
+    <span class="btn btn-icon btn-ghost" style="font-size:20px;flex:none" title="Open full screen"><i class="ph-duotone ph-caret-up"></i></span>
+    <div style="display:flex;align-items:center;gap:14px;width:280px;flex:none">
+      <div style="width:46px;height:46px;flex:none;border:1px solid var(--color-divider);display:flex;align-items:center;justify-content:center;font-family:var(--font-heading);font-weight:600;font-size:20px;color:color-mix(in srgb,var(--color-text) 70%,transparent)">S</div>
+      <div style="min-width:0">
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:color-mix(in srgb,var(--color-text) 60%,transparent)">Signal &amp; Noise</div>
+        <div style="font-family:var(--font-heading);font-weight:600;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Ecash, mints and the trust you can't avoid</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:18px;flex:none;font-size:22px;color:var(--color-text)">
+      <i class="ph-duotone ph-skip-back"></i>
+      <i class="ph-duotone ph-pause-circle" style="font-size:34px;color:var(--color-accent-700)"></i>
+      <i class="ph-duotone ph-skip-forward"></i>
+    </div>
+    <div style="flex:1;display:flex;align-items:center;gap:14px">
+      <span style="font-size:13px;font-variant-numeric:tabular-nums;color:color-mix(in srgb,var(--color-text) 65%,transparent)">21:14</span>
+      <div style="flex:1;height:2px;background:var(--color-neutral-300);position:relative"><div style="position:absolute;left:0;top:0;bottom:0;width:34%;background:var(--color-accent)"></div><div style="position:absolute;left:34%;top:-3px;width:8px;height:8px;border-radius:50%;background:var(--color-accent)"></div></div>
+      <span style="font-size:13px;font-variant-numeric:tabular-nums;color:color-mix(in srgb,var(--color-text) 65%,transparent)">42:07 left</span>
+    </div>
+    <sc-if value="{{ value }}" hint-placeholder-val="{{ true }}">
+    <div style="display:flex;align-items:center;gap:14px;flex:none">
+      <span style="font-size:13px;font-variant-numeric:tabular-nums;color:color-mix(in srgb,var(--color-text) 70%,transparent)">47 sats/min</span>
+      <span class="btn btn-primary" style="font-size:14px;padding:7px 16px"><i class="ph-duotone ph-lightning"></i>Boost</span>
+    </div>
+    </sc-if>
+  </div>
+</div>
+</div>
+
+<div>
+<p class="dv-cap">Library · Episodes (same toggle, other state)</p>
+<div data-screen-label="2a Episodes" style="width:1120px;height:1010px;display:flex;flex-direction:column;background:var(--color-bg);color:var(--color-text);font-family:var(--font-body);box-shadow:var(--shadow-md);overflow:hidden">
+  
+  <div style="flex:none;padding:22px 40px 0">
+    <div style="display:flex;align-items:baseline;gap:24px">
+      <span style="font-family:var(--font-heading);font-weight:600;font-size:26px;letter-spacing:-0.02em">Podcasts</span>
+      <div style="flex:1;display:flex;justify-content:center">
+        <div class="seg" style="font-size:14px">
+          <span class="seg-opt" style="padding:6px 20px;color:color-mix(in srgb,var(--color-text) 70%,transparent)">Shows</span>
+          <span class="seg-opt" style="padding:6px 20px;background:var(--color-accent);color:var(--color-bg);font-weight:600">Episodes</span>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:14px">
+        <i class="ph-duotone ph-magnifying-glass" style="font-size:20px;color:var(--color-accent-700)"></i>
+        <span style="font-size:14px;color:color-mix(in srgb,var(--color-text) 70%,transparent)">A. Kellner</span>
+      </div>
+    </div>
+    <div style="height:3px;background:var(--color-text);margin-top:14px"></div>
+    <div style="display:flex;justify-content:space-between;padding:7px 0;font-size:12px;text-transform:uppercase;letter-spacing:.1em;color:color-mix(in srgb,var(--color-text) 62%,transparent)">
+      <span>Tuesday, 2 September</span>
+      <span>Unplayed only</span>
+      <span>Newest first</span>
+    </div>
+    <div style="height:1px;background:var(--color-divider)"></div>
+  </div>
+
+  <div style="flex:1;overflow:hidden;padding:24px 40px 0">
+    <h3 style="margin:0 0 6px;font-size:25px">Latest episodes</h3>
+    <div style="display:grid;grid-template-columns:minmax(0,1fr) auto 44px;align-items:center;gap:0 24px;padding:17px 0;border-bottom:1px solid var(--color-divider)">
+      <div style="min-width:0">
+        <div style="display:flex;align-items:center;gap:9px;font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:color-mix(in srgb,var(--color-text) 62%,transparent)"><span style="width:6px;height:6px;border-radius:50%;background:var(--color-accent-2);flex:none"></span><span>Signal &amp; Noise</span></div>
+        <div style="font-family:var(--font-heading);font-weight:600;font-size:19px;margin-top:3px;cursor:pointer" style-hover="color:var(--color-accent-700);text-decoration:underline">Ecash, mints and the trust you can't avoid</div>
+        <div style="font-size:14px;color:color-mix(in srgb,var(--color-text) 70%,transparent);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Why a mint is still a custodian, and what that costs you in practice.</div>
+      </div>
+      <span style="font-size:14px;font-variant-numeric:tabular-nums;color:color-mix(in srgb,var(--color-text) 70%,transparent)">42 min left</span>
+      <span class="btn btn-icon btn-secondary" style="font-size:17px"><i class="ph-duotone ph-play"></i></span>
+    </div>
+    <div style="display:grid;grid-template-columns:minmax(0,1fr) auto 44px;align-items:center;gap:0 24px;padding:17px 0;border-bottom:1px solid var(--color-divider)">
+      <div style="min-width:0">
+        <div style="display:flex;align-items:center;gap:9px;font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:color-mix(in srgb,var(--color-text) 62%,transparent)"><span style="width:6px;height:6px;border-radius:50%;background:var(--color-accent-2);flex:none"></span><span>Hard Money Weekly</span></div>
+        <div style="font-family:var(--font-heading);font-weight:600;font-size:19px;margin-top:3px;cursor:pointer" style-hover="color:var(--color-accent-700);text-decoration:underline">The custody question nobody wants</div>
+        <div style="font-size:14px;color:color-mix(in srgb,var(--color-text) 70%,transparent);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Three ways people lose coins that have nothing to do with price.</div>
+      </div>
+      <span style="font-size:14px;font-variant-numeric:tabular-nums;color:color-mix(in srgb,var(--color-text) 70%,transparent)">1 h 04 left</span>
+      <span class="btn btn-icon btn-secondary" style="font-size:17px"><i class="ph-duotone ph-play"></i></span>
+    </div>
+    <div style="display:grid;grid-template-columns:minmax(0,1fr) auto 44px;align-items:center;gap:0 24px;padding:17px 0;border-bottom:1px solid var(--color-divider)">
+      <div style="min-width:0">
+        <div style="display:flex;align-items:center;gap:9px;font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:color-mix(in srgb,var(--color-text) 62%,transparent)"><span style="width:6px;height:6px;border-radius:50%;background:var(--color-accent-2);flex:none"></span><span>The Mint</span></div>
+        <div style="font-family:var(--font-heading);font-weight:600;font-size:19px;margin-top:3px;cursor:pointer" style-hover="color:var(--color-accent-700);text-decoration:underline">Blind signatures, explained slowly</div>
+        <div style="font-size:14px;color:color-mix(in srgb,var(--color-text) 70%,transparent);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">The one piece of cryptography worth understanding before you spend ecash.</div>
+      </div>
+      <span style="font-size:14px;font-variant-numeric:tabular-nums;color:color-mix(in srgb,var(--color-text) 70%,transparent)">28 min left</span>
+      <span class="btn btn-icon btn-secondary" style="font-size:17px"><i class="ph-duotone ph-play"></i></span>
+    </div>
+    <div style="display:grid;grid-template-columns:minmax(0,1fr) auto 44px;align-items:center;gap:0 24px;padding:17px 0;border-bottom:1px solid var(--color-divider)">
+      <div style="min-width:0">
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:color-mix(in srgb,var(--color-text) 62%,transparent)">Sovereign Stack</div>
+        <div style="font-family:var(--font-heading);font-weight:600;font-size:19px;margin-top:3px;cursor:pointer" style-hover="color:var(--color-accent-700);text-decoration:underline">Running a node on a boat</div>
+        <div style="font-size:14px;color:color-mix(in srgb,var(--color-text) 70%,transparent);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Solar, starlink and a Raspberry Pi that has been wet twice.</div>
+      </div>
+      <span style="font-size:14px;font-variant-numeric:tabular-nums;color:color-mix(in srgb,var(--color-text) 70%,transparent)">55 min left</span>
+      <span class="btn btn-icon btn-secondary" style="font-size:17px"><i class="ph-duotone ph-play"></i></span>
+    </div>
+    <div style="display:grid;grid-template-columns:minmax(0,1fr) auto 44px;align-items:center;gap:0 24px;padding:17px 0;border-bottom:1px solid var(--color-divider)">
+      <div style="min-width:0">
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:color-mix(in srgb,var(--color-text) 62%,transparent)">Nodes &amp; Nostr</div>
+        <div style="font-family:var(--font-heading);font-weight:600;font-size:19px;margin-top:3px;cursor:pointer" style-hover="color:var(--color-accent-700);text-decoration:underline">Relays are the new inbox</div>
+        <div style="font-size:14px;color:color-mix(in srgb,var(--color-text) 70%,transparent);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">What happens to your feed when the relay you rely on goes quiet.</div>
+      </div>
+      <span style="font-size:14px;font-variant-numeric:tabular-nums;color:color-mix(in srgb,var(--color-text) 70%,transparent)">12 min left</span>
+      <span class="btn btn-icon btn-secondary" style="font-size:17px"><i class="ph-duotone ph-play"></i></span>
+    </div>
+    <div style="display:grid;grid-template-columns:minmax(0,1fr) auto 44px;align-items:center;gap:0 24px;padding:17px 0">
+      <div style="min-width:0">
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:color-mix(in srgb,var(--color-text) 62%,transparent)">Layer Two Lounge</div>
+        <div style="font-family:var(--font-heading);font-weight:600;font-size:19px;margin-top:3px;cursor:pointer" style-hover="color:var(--color-accent-700);text-decoration:underline">Channel liquidity for humans</div>
+        <div style="font-size:14px;color:color-mix(in srgb,var(--color-text) 70%,transparent);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Inbound, outbound, and why your payment failed at the worst moment.</div>
+      </div>
+      <span style="font-size:14px;font-variant-numeric:tabular-nums;color:color-mix(in srgb,var(--color-text) 70%,transparent)">1 h 18 left</span>
+      <span class="btn btn-icon btn-secondary" style="font-size:17px"><i class="ph-duotone ph-play"></i></span>
+    </div>
+  </div>
+
+  
+  <div style="flex:none;border-top:1px solid var(--color-divider);display:flex;align-items:center;gap:28px;height:78px;padding:0 40px;background:var(--color-neutral-100)">
+    <span class="btn btn-icon btn-ghost" style="font-size:20px;flex:none" title="Open full screen"><i class="ph-duotone ph-caret-up"></i></span>
+    <div style="display:flex;align-items:center;gap:14px;width:280px;flex:none">
+      <div style="width:46px;height:46px;flex:none;border:1px solid var(--color-divider);display:flex;align-items:center;justify-content:center;font-family:var(--font-heading);font-weight:600;font-size:20px;color:color-mix(in srgb,var(--color-text) 70%,transparent)">S</div>
+      <div style="min-width:0">
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:color-mix(in srgb,var(--color-text) 60%,transparent)">Signal &amp; Noise</div>
+        <div style="font-family:var(--font-heading);font-weight:600;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Ecash, mints and the trust you can't avoid</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:18px;flex:none;font-size:22px">
+      <i class="ph-duotone ph-skip-back"></i>
+      <i class="ph-duotone ph-pause-circle" style="font-size:34px;color:var(--color-accent-700)"></i>
+      <i class="ph-duotone ph-skip-forward"></i>
+    </div>
+    <div style="flex:1;display:flex;align-items:center;gap:14px">
+      <span style="font-size:13px;font-variant-numeric:tabular-nums;color:color-mix(in srgb,var(--color-text) 65%,transparent)">21:14</span>
+      <div style="flex:1;height:2px;background:var(--color-neutral-300);position:relative"><div style="position:absolute;left:0;top:0;bottom:0;width:34%;background:var(--color-accent)"></div><div style="position:absolute;left:34%;top:-3px;width:8px;height:8px;border-radius:50%;background:var(--color-accent)"></div></div>
+      <span style="font-size:13px;font-variant-numeric:tabular-nums;color:color-mix(in srgb,var(--color-text) 65%,transparent)">42:07 left</span>
+    </div>
+    <sc-if value="{{ value }}" hint-placeholder-val="{{ true }}">
+    <div style="display:flex;align-items:center;gap:14px;flex:none">
+      <span style="font-size:13px;font-variant-numeric:tabular-nums;color:color-mix(in srgb,var(--color-text) 70%,transparent)">47 sats/min</span>
+      <span class="btn btn-primary" style="font-size:14px;padding:7px 16px"><i class="ph-duotone ph-lightning"></i>Boost</span>
+    </div>
+    </sc-if>
+  </div>
+</div>
+</div>
+
+<div>
+<p class="dv-cap">Show page · compact head, list dominates</p>
+<div data-screen-label="2a Show" style="width:1120px;height:1010px;display:flex;flex-direction:column;background:var(--color-bg);color:var(--color-text);font-family:var(--font-body);box-shadow:var(--shadow-md);overflow:hidden">
+  
+  <div style="flex:none;padding:22px 40px 0">
+    <div style="display:flex;align-items:baseline;gap:24px">
+      <span class="btn btn-ghost" style="font-size:14px;padding-left:0;white-space:nowrap;flex:none"><i class="ph-duotone ph-arrow-left"></i>All shows</span>
+      <div style="flex:1;display:flex;justify-content:center">
+        <div class="seg" style="font-size:14px">
+          <span class="seg-opt" style="padding:6px 20px;background:var(--color-accent);color:var(--color-bg);font-weight:600">Shows</span>
+          <span class="seg-opt" style="padding:6px 20px;color:color-mix(in srgb,var(--color-text) 70%,transparent)">Episodes</span>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:14px">
+        <i class="ph-duotone ph-magnifying-glass" style="font-size:20px;color:var(--color-accent-700)"></i>
+        <span style="font-size:14px;color:color-mix(in srgb,var(--color-text) 70%,transparent)">A. Kellner</span>
+      </div>
+    </div>
+    <div style="height:3px;background:var(--color-text);margin-top:14px"></div>
+    <div style="display:flex;justify-content:space-between;padding:7px 0;font-size:12px;text-transform:uppercase;letter-spacing:.1em;color:color-mix(in srgb,var(--color-text) 62%,transparent)">
+      <span>Weekly</span>
+      <span>84 episodes · 1 new</span>
+      <span>Newest first</span>
+    </div>
+    <div style="height:1px;background:var(--color-divider)"></div>
+  </div>
+
+  <div style="flex:1;overflow:hidden;padding:26px 40px 0">
+    <div style="display:flex;gap:26px;align-items:flex-start;margin:0 0 26px">
+      <div class="halftone" style="width:132px;height:132px;flex:none"><image-slot id="2a-show-cover" shape="rect" placeholder="The Mint"></image-slot></div>
+      <div style="flex:1;min-width:0">
+        <h2 style="margin:0 0 6px;font-size:32px">The Mint</h2>
+        <p style="margin:0;font-size:16px;line-height:1.55;max-width:62ch;color:color-mix(in srgb,var(--color-text) 78%,transparent)">Ecash, mints and the mechanics of spending bitcoin without asking permission. Long interviews, no price talk.</p>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;flex:none">
+        <span class="btn btn-secondary" style="font-size:14px"><i class="ph-duotone ph-check"></i>Following</span>
+        <span class="btn btn-icon btn-secondary" style="font-size:17px"><i class="ph-duotone ph-dots-three"></i></span>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:minmax(0,1fr) auto 44px;align-items:center;gap:0 24px;padding:16px 0;border-top:1px solid var(--color-divider)">
+      <div style="min-width:0">
+        <div style="display:flex;align-items:center;gap:9px;font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:color-mix(in srgb,var(--color-text) 62%,transparent)"><span style="width:6px;height:6px;border-radius:50%;background:var(--color-accent-2);flex:none"></span><span>New · 28 August</span></div>
+        <div style="font-family:var(--font-heading);font-weight:600;font-size:19px;margin-top:3px;cursor:pointer" style-hover="color:var(--color-accent-700);text-decoration:underline">Blind signatures, explained slowly</div>
+        <div style="font-size:14px;color:color-mix(in srgb,var(--color-text) 70%,transparent);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">The one piece of cryptography worth understanding before you spend ecash.</div>
+      </div>
+      <span style="font-size:14px;font-variant-numeric:tabular-nums;color:color-mix(in srgb,var(--color-text) 70%,transparent)">28 min left</span>
+      <span class="btn btn-icon btn-secondary" style="font-size:17px"><i class="ph-duotone ph-play"></i></span>
+    </div>
+    <div style="display:grid;grid-template-columns:minmax(0,1fr) auto 44px;align-items:center;gap:0 24px;padding:16px 0;border-top:1px solid var(--color-divider)">
+      <div style="min-width:0">
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:color-mix(in srgb,var(--color-text) 62%,transparent)">21 August</div>
+        <div style="font-family:var(--font-heading);font-weight:600;font-size:19px;margin-top:3px;cursor:pointer" style-hover="color:var(--color-accent-700);text-decoration:underline">Who runs the mints in five years</div>
+        <div style="font-size:14px;color:color-mix(in srgb,var(--color-text) 70%,transparent);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Operators, regulators and the awkward middle ground between them.</div>
+      </div>
+      <span style="font-size:14px;color:color-mix(in srgb,var(--color-text) 55%,transparent)">Played</span>
+      <span class="btn btn-icon btn-ghost" style="font-size:17px"><i class="ph-duotone ph-play"></i></span>
+    </div>
+    <div style="display:grid;grid-template-columns:minmax(0,1fr) auto 44px;align-items:center;gap:0 24px;padding:16px 0;border-top:1px solid var(--color-divider)">
+      <div style="min-width:0">
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:color-mix(in srgb,var(--color-text) 62%,transparent)">14 August</div>
+        <div style="font-family:var(--font-heading);font-weight:600;font-size:19px;margin-top:3px;cursor:pointer" style-hover="color:var(--color-accent-700);text-decoration:underline">A wallet that forgets on purpose</div>
+        <div style="font-size:14px;color:color-mix(in srgb,var(--color-text) 70%,transparent);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Backups, tokens and the tradeoff nobody puts in the onboarding flow.</div>
+      </div>
+      <span style="font-size:14px;font-variant-numeric:tabular-nums;color:color-mix(in srgb,var(--color-text) 70%,transparent)">18 min left</span>
+      <span class="btn btn-icon btn-secondary" style="font-size:17px"><i class="ph-duotone ph-play"></i></span>
+    </div>
+    <div style="display:grid;grid-template-columns:minmax(0,1fr) auto 44px;align-items:center;gap:0 24px;padding:16px 0;border-top:1px solid var(--color-divider)">
+      <div style="min-width:0">
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:color-mix(in srgb,var(--color-text) 62%,transparent)">7 August</div>
+        <div style="font-family:var(--font-heading);font-weight:600;font-size:19px;margin-top:3px;cursor:pointer" style-hover="color:var(--color-accent-700);text-decoration:underline">Field notes from a Nairobi meetup</div>
+        <div style="font-size:14px;color:color-mix(in srgb,var(--color-text) 70%,transparent);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">What people actually buy when the local currency moves every week.</div>
+      </div>
+      <span style="font-size:14px;color:color-mix(in srgb,var(--color-text) 55%,transparent)">Played</span>
+      <span class="btn btn-icon btn-ghost" style="font-size:17px"><i class="ph-duotone ph-play"></i></span>
+    </div>
+  </div>
+
+  
+  <div style="flex:none;border-top:1px solid var(--color-divider);display:flex;align-items:center;gap:28px;height:78px;padding:0 40px;background:var(--color-neutral-100)">
+    <span class="btn btn-icon btn-ghost" style="font-size:20px;flex:none" title="Open full screen"><i class="ph-duotone ph-caret-up"></i></span>
+    <div style="display:flex;align-items:center;gap:14px;width:280px;flex:none">
+      <div style="width:46px;height:46px;flex:none;border:1px solid var(--color-divider);display:flex;align-items:center;justify-content:center;font-family:var(--font-heading);font-weight:600;font-size:20px;color:color-mix(in srgb,var(--color-text) 70%,transparent)">S</div>
+      <div style="min-width:0">
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:color-mix(in srgb,var(--color-text) 60%,transparent)">Signal &amp; Noise</div>
+        <div style="font-family:var(--font-heading);font-weight:600;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Ecash, mints and the trust you can't avoid</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:18px;flex:none;font-size:22px">
+      <i class="ph-duotone ph-skip-back"></i>
+      <i class="ph-duotone ph-pause-circle" style="font-size:34px;color:var(--color-accent-700)"></i>
+      <i class="ph-duotone ph-skip-forward"></i>
+    </div>
+    <div style="flex:1;display:flex;align-items:center;gap:14px">
+      <span style="font-size:13px;font-variant-numeric:tabular-nums;color:color-mix(in srgb,var(--color-text) 65%,transparent)">21:14</span>
+      <div style="flex:1;height:2px;background:var(--color-neutral-300);position:relative"><div style="position:absolute;left:0;top:0;bottom:0;width:34%;background:var(--color-accent)"></div><div style="position:absolute;left:34%;top:-3px;width:8px;height:8px;border-radius:50%;background:var(--color-accent)"></div></div>
+      <span style="font-size:13px;font-variant-numeric:tabular-nums;color:color-mix(in srgb,var(--color-text) 65%,transparent)">42:07 left</span>
+    </div>
+    <sc-if value="{{ value }}" hint-placeholder-val="{{ true }}">
+    <div style="display:flex;align-items:center;gap:14px;flex:none">
+      <span style="font-size:13px;font-variant-numeric:tabular-nums;color:color-mix(in srgb,var(--color-text) 70%,transparent)">47 sats/min</span>
+      <span class="btn btn-primary" style="font-size:14px;padding:7px 16px"><i class="ph-duotone ph-lightning"></i>Boost</span>
+    </div>
+    </sc-if>
+  </div>
+</div>
+</div>
+
+<div>
+<p class="dv-cap">Search · icon expanded to a full-width field</p>
+<div data-screen-label="2a Search" style="width:1120px;height:1010px;display:flex;flex-direction:column;background:var(--color-bg);color:var(--color-text);font-family:var(--font-body);box-shadow:var(--shadow-md);overflow:hidden">
+  
+  <div style="flex:none;padding:22px 40px 0">
+    <div style="display:flex;align-items:center;gap:16px">
+      <i class="ph-duotone ph-magnifying-glass" style="font-size:24px;color:var(--color-accent-700)"></i>
+      <div style="flex:1;display:flex;align-items:center;font-family:var(--font-heading);font-weight:600;font-size:28px;letter-spacing:-0.02em"><span>sove</span><span style="width:2px;height:28px;background:var(--color-accent);margin-left:3px"></span></div>
+      <span class="btn btn-icon btn-ghost" style="font-size:20px"><i class="ph-duotone ph-x"></i></span>
+    </div>
+    <div style="height:3px;background:var(--color-text);margin-top:14px"></div>
+    <div style="display:flex;gap:22px;padding:7px 0;font-size:12px;text-transform:uppercase;letter-spacing:.1em">
+      <span style="color:var(--color-accent-700);font-weight:600">All</span>
+      <span style="color:color-mix(in srgb,var(--color-text) 62%,transparent)">Shows</span>
+      <span style="color:color-mix(in srgb,var(--color-text) 62%,transparent)">Episodes</span>
+      <span style="color:color-mix(in srgb,var(--color-text) 62%,transparent)">Unplayed</span>
+      <span style="margin-left:auto;color:color-mix(in srgb,var(--color-text) 62%,transparent)">Searching your subscriptions</span>
+    </div>
+    <div style="height:1px;background:var(--color-divider)"></div>
+  </div>
+
+  <div style="flex:1;overflow:hidden;padding:26px 40px 0">
+    <p style="margin:0 0 14px;font-size:12px;text-transform:uppercase;letter-spacing:.12em;color:color-mix(in srgb,var(--color-text) 55%,transparent)">Shows</p>
+    <div style="display:flex;gap:26px;margin:0 0 32px">
+      <div style="display:flex;align-items:center;gap:16px;width:340px">
+        <div class="halftone" style="width:88px;height:88px;flex:none"><image-slot id="2a-search-cover" shape="rect" placeholder="Cover"></image-slot></div>
+        <div style="min-width:0">
+          <div style="display:flex;align-items:center;gap:8px"><span style="width:7px;height:7px;border-radius:50%;background:var(--color-accent-2);flex:none"></span><span style="font-family:var(--font-heading);font-weight:600;font-size:18px">Sovereign Stack</span></div>
+          <div style="font-size:14px;color:color-mix(in srgb,var(--color-text) 68%,transparent)">1 new · weekly</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:16px;width:340px">
+        <div class="halftone" style="width:88px;height:88px;flex:none"><image-slot id="2a-search-cover-2" shape="rect" placeholder="Cover"></image-slot></div>
+        <div style="min-width:0">
+          <div style="font-family:var(--font-heading);font-weight:600;font-size:18px">Proof of Talk</div>
+          <div style="font-size:14px;color:color-mix(in srgb,var(--color-text) 68%,transparent)">All played · monthly</div>
+        </div>
+      </div>
+    </div>
+
+    <p style="margin:0 0 6px;font-size:12px;text-transform:uppercase;letter-spacing:.12em;color:color-mix(in srgb,var(--color-text) 55%,transparent)">Episodes</p>
+    <div style="display:grid;grid-template-columns:minmax(0,1fr) auto 44px;align-items:center;gap:0 24px;padding:16px 0;border-top:1px solid var(--color-divider)">
+      <div style="min-width:0">
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:color-mix(in srgb,var(--color-text) 62%,transparent)">Sovereign Stack</div>
+        <div style="font-family:var(--font-heading);font-weight:600;font-size:19px;margin-top:3px;cursor:pointer" style-hover="color:var(--color-accent-700);text-decoration:underline">Running a node on a boat</div>
+        <div style="font-size:14px;color:color-mix(in srgb,var(--color-text) 70%,transparent);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Solar, starlink and a Raspberry Pi that has been wet twice.</div>
+      </div>
+      <span style="font-size:14px;font-variant-numeric:tabular-nums;color:color-mix(in srgb,var(--color-text) 70%,transparent)">55 min left</span>
+      <span class="btn btn-icon btn-secondary" style="font-size:17px"><i class="ph-duotone ph-play"></i></span>
+    </div>
+    <div style="display:grid;grid-template-columns:minmax(0,1fr) auto 44px;align-items:center;gap:0 24px;padding:16px 0;border-top:1px solid var(--color-divider)">
+      <div style="min-width:0">
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:color-mix(in srgb,var(--color-text) 62%,transparent)">Sovereign Stack</div>
+        <div style="font-family:var(--font-heading);font-weight:600;font-size:19px;margin-top:3px;cursor:pointer" style-hover="color:var(--color-accent-700);text-decoration:underline">Self-hosting without the weekend</div>
+        <div style="font-size:14px;color:color-mix(in srgb,var(--color-text) 70%,transparent);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">The four services worth running yourself, and the rest you should not.</div>
+      </div>
+      <span style="font-size:14px;color:color-mix(in srgb,var(--color-text) 55%,transparent)">Played</span>
+      <span class="btn btn-icon btn-ghost" style="font-size:17px"><i class="ph-duotone ph-play"></i></span>
+    </div>
+    <div style="display:grid;grid-template-columns:minmax(0,1fr) auto 44px;align-items:center;gap:0 24px;padding:16px 0;border-top:1px solid var(--color-divider)">
+      <div style="min-width:0">
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:color-mix(in srgb,var(--color-text) 62%,transparent)">Proof of Talk</div>
+        <div style="font-family:var(--font-heading);font-weight:600;font-size:19px;margin-top:3px;cursor:pointer" style-hover="color:var(--color-accent-700);text-decoration:underline">Sovereignty is a maintenance schedule</div>
+        <div style="font-size:14px;color:color-mix(in srgb,var(--color-text) 70%,transparent);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">A panel that turned into an argument about backups.</div>
+      </div>
+      <span style="font-size:14px;font-variant-numeric:tabular-nums;color:color-mix(in srgb,var(--color-text) 70%,transparent)">1 h 02 left</span>
+      <span class="btn btn-icon btn-secondary" style="font-size:17px"><i class="ph-duotone ph-play"></i></span>
+    </div>
+  </div>
+
+  
+  <div style="flex:none;border-top:1px solid var(--color-divider);display:flex;align-items:center;gap:28px;height:78px;padding:0 40px;background:var(--color-neutral-100)">
+    <span class="btn btn-icon btn-ghost" style="font-size:20px;flex:none" title="Open full screen"><i class="ph-duotone ph-caret-up"></i></span>
+    <div style="display:flex;align-items:center;gap:14px;width:280px;flex:none">
+      <div style="width:46px;height:46px;flex:none;border:1px solid var(--color-divider);display:flex;align-items:center;justify-content:center;font-family:var(--font-heading);font-weight:600;font-size:20px;color:color-mix(in srgb,var(--color-text) 70%,transparent)">S</div>
+      <div style="min-width:0">
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:color-mix(in srgb,var(--color-text) 60%,transparent)">Signal &amp; Noise</div>
+        <div style="font-family:var(--font-heading);font-weight:600;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Ecash, mints and the trust you can't avoid</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:18px;flex:none;font-size:22px">
+      <i class="ph-duotone ph-skip-back"></i>
+      <i class="ph-duotone ph-pause-circle" style="font-size:34px;color:var(--color-accent-700)"></i>
+      <i class="ph-duotone ph-skip-forward"></i>
+    </div>
+    <div style="flex:1;display:flex;align-items:center;gap:14px">
+      <span style="font-size:13px;font-variant-numeric:tabular-nums;color:color-mix(in srgb,var(--color-text) 65%,transparent)">21:14</span>
+      <div style="flex:1;height:2px;background:var(--color-neutral-300);position:relative"><div style="position:absolute;left:0;top:0;bottom:0;width:34%;background:var(--color-accent)"></div><div style="position:absolute;left:34%;top:-3px;width:8px;height:8px;border-radius:50%;background:var(--color-accent)"></div></div>
+      <span style="font-size:13px;font-variant-numeric:tabular-nums;color:color-mix(in srgb,var(--color-text) 65%,transparent)">42:07 left</span>
+    </div>
+    <sc-if value="{{ value }}" hint-placeholder-val="{{ true }}">
+    <div style="display:flex;align-items:center;gap:14px;flex:none">
+      <span style="font-size:13px;font-variant-numeric:tabular-nums;color:color-mix(in srgb,var(--color-text) 70%,transparent)">47 sats/min</span>
+      <span class="btn btn-primary" style="font-size:14px;padding:7px 16px"><i class="ph-duotone ph-lightning"></i>Boost</span>
+    </div>
+    </sc-if>
+  </div>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+
+<div class="dv-opt" id="2b">
+<div class="dv-olabel"><a class="dv-oid" href="#2b">2b</a>Left rail carries the subscriptions; the toggle sits over the pane</div>
+<div class="dv-frames">
+
+<div>
+<p class="dv-cap">Library · Shows</p>
+<div data-screen-label="2b Shows" style="width:1120px;height:1010px;display:flex;flex-direction:column;background:var(--color-bg);color:var(--color-text);font-family:var(--font-body);box-shadow:var(--shadow-md);overflow:hidden">
+  
+  <div style="flex:1;display:flex;min-height:0">
+    <div style="width:262px;flex:none;border-right:1px solid var(--color-divider);padding:24px 26px 0;display:flex;flex-direction:column">
+      <span style="font-family:var(--font-heading);font-weight:600;font-size:24px;letter-spacing:-0.02em">Podcasts</span>
+      <div style="height:3px;background:var(--color-text);margin:14px 0 12px"></div>
+      <div style="display:flex;flex-direction:column;gap:7px;font-size:16px">
+        <span style="font-family:var(--font-heading);font-weight:600;color:var(--color-accent-700)">Library</span>
+        <span style="color:color-mix(in srgb,var(--color-text) 72%,transparent)">Search</span>
+        <span style="color:color-mix(in srgb,var(--color-text) 72%,transparent)">Downloads</span>
+      </div>
+      <div style="display:flex;align-items:baseline;justify-content:space-between;margin:28px 0 10px">
+        <span style="font-size:12px;text-transform:uppercase;letter-spacing:.12em;color:color-mix(in srgb,var(--color-text) 55%,transparent)">Subscriptions</span>
+        <sc-if value="{{ manage }}" hint-placeholder-val="{{ true }}"><span style="font-size:13px;color:var(--color-accent-700)">Manage</span></sc-if>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:9px;font-size:15px">
+        <div style="display:flex;align-items:center;gap:9px"><sc-if value="{{ markers }}" hint-placeholder-val="{{ true }}"><span style="width:6px;height:6px;border-radius:50%;background:var(--color-accent-2);flex:none"></span></sc-if><span>Signal &amp; Noise</span></div>
+        <div style="display:flex;align-items:center;gap:9px"><sc-if value="{{ markers }}" hint-placeholder-val="{{ true }}"><span style="width:6px;height:6px;border-radius:50%;background:var(--color-accent-2);flex:none"></span></sc-if><span>The Mint</span></div>
+        <div style="display:flex;align-items:center;gap:9px"><sc-if value="{{ markers }}" hint-placeholder-val="{{ true }}"><span style="width:6px;height:6px;border-radius:50%;background:var(--color-accent-2);flex:none"></span></sc-if><span>Hard Money Weekly</span></div>
+        <div style="display:flex;align-items:center;gap:9px;padding-left:15px;color:color-mix(in srgb,var(--color-text) 65%,transparent)"><span>Nodes &amp; Nostr</span></div>
+        <div style="display:flex;align-items:center;gap:9px"><sc-if value="{{ markers }}" hint-placeholder-val="{{ true }}"><span style="width:6px;height:6px;border-radius:50%;background:var(--color-accent-2);flex:none"></span></sc-if><span>Sovereign Stack</span></div>
+        <div style="display:flex;align-items:center;gap:9px;padding-left:15px;color:color-mix(in srgb,var(--color-text) 65%,transparent)"><span>Layer Two Lounge</span></div>
+        <div style="display:flex;align-items:center;gap:9px;padding-left:15px;color:color-mix(in srgb,var(--color-text) 65%,transparent)"><span>Proof of Talk</span></div>
+        <div style="display:flex;align-items:center;gap:9px;padding-left:15px;color:color-mix(in srgb,var(--color-text) 65%,transparent)"><span>Sats &amp; Sensibility</span></div>
+      </div>
+    </div>
+
+    <div style="flex:1;min-width:0;display:flex;flex-direction:column;padding:24px 40px 0">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:20px">
+        <div class="seg" style="font-size:14px">
+          <span class="seg-opt" style="padding:6px 20px;background:var(--color-accent);color:var(--color-bg);font-weight:600">Shows</span>
+          <span class="seg-opt" style="padding:6px 20px;color:color-mix(in srgb,var(--color-text) 70%,transparent)">Episodes</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:16px">
+          <span style="font-size:14px;color:color-mix(in srgb,var(--color-text) 70%,transparent)">Recently updated</span>
+          <i class="ph-duotone ph-magnifying-glass" style="font-size:20px;color:var(--color-accent-700)"></i>
+        </div>
+      </div>
+      <div style="height:1px;background:var(--color-divider);margin:16px 0 0"></div>
+      <div style="display:flex;justify-content:space-between;padding:7px 0;font-size:12px;text-transform:uppercase;letter-spacing:.1em;color:color-mix(in srgb,var(--color-text) 62%,transparent)">
+        <span>8 subscriptions</span>
+        <span>4 with new episodes</span>
+      </div>
+      <div style="flex:1;overflow:hidden;padding-top:20px">
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:24px 26px">
+          <div>
+            <div class="halftone" style="width:100%;aspect-ratio:1/1;margin:0 0 10px"><image-slot id="2b-cover-1" shape="rect" placeholder="Signal &amp; Noise"></image-slot></div>
+            <div style="display:flex;align-items:baseline;gap:8px"><sc-if value="{{ markers }}" hint-placeholder-val="{{ true }}"><span style="width:7px;height:7px;border-radius:50%;background:var(--color-accent-2);flex:none"></span></sc-if><span style="font-family:var(--font-heading);font-weight:600;font-size:17px">Signal &amp; Noise</span></div>
+            <div style="font-size:14px;color:color-mix(in srgb,var(--color-text) 68%,transparent)">3 new</div>
+          </div>
+          <div>
+            <div class="halftone" style="width:100%;aspect-ratio:1/1;margin:0 0 10px"><image-slot id="2b-cover-2" shape="rect" placeholder="The Mint"></image-slot></div>
+            <div style="display:flex;align-items:baseline;gap:8px"><sc-if value="{{ markers }}" hint-placeholder-val="{{ true }}"><span style="width:7px;height:7px;border-radius:50%;background:var(--color-accent-2);flex:none"></span></sc-if><span style="font-family:var(--font-heading);font-weight:600;font-size:17px">The Mint</span></div>
+            <div style="font-size:14px;color:color-mix(in srgb,var(--color-text) 68%,transparent)">1 new</div>
+          </div>
+          <div>
+            <div class="halftone" style="width:100%;aspect-ratio:1/1;margin:0 0 10px"><image-slot id="2b-cover-3" shape="rect" placeholder="Hard Money Weekly"></image-slot></div>
+            <div style="display:flex;align-items:baseline;gap:8px"><sc-if value="{{ markers }}" hint-placeholder-val="{{ true }}"><span style="width:7px;height:7px;border-radius:50%;background:var(--color-accent-2);flex:none"></span></sc-if><span style="font-family:var(--font-heading);font-weight:600;font-size:17px">Hard Money Weekly</span></div>
+            <div style="font-size:14px;color:color-mix(in srgb,var(--color-text) 68%,transparent)">2 new</div>
+          </div>
+          <div>
+            <div class="halftone" style="width:100%;aspect-ratio:1/1;margin:0 0 10px"><image-slot id="2b-cover-4" shape="rect" placeholder="Nodes &amp; Nostr"></image-slot></div>
+            <div style="font-family:var(--font-heading);font-weight:600;font-size:17px">Nodes &amp; Nostr</div>
+            <div style="font-size:14px;color:color-mix(in srgb,var(--color-text) 68%,transparent)">All played</div>
+          </div>
+          <div>
+            <div class="halftone" style="width:100%;aspect-ratio:1/1;margin:0 0 10px"><image-slot id="2b-cover-5" shape="rect" placeholder="Sovereign Stack"></image-slot></div>
+            <div style="display:flex;align-items:baseline;gap:8px"><sc-if value="{{ markers }}" hint-placeholder-val="{{ true }}"><span style="width:7px;height:7px;border-radius:50%;background:var(--color-accent-2);flex:none"></span></sc-if><span style="font-family:var(--font-heading);font-weight:600;font-size:17px">Sovereign Stack</span></div>
+            <div style="font-size:14px;color:color-mix(in srgb,var(--color-text) 68%,transparent)">1 new</div>
+          </div>
+          <div>
+            <div class="halftone" style="width:100%;aspect-ratio:1/1;margin:0 0 10px"><image-slot id="2b-cover-6" shape="rect" placeholder="Layer Two Lounge"></image-slot></div>
+            <div style="font-family:var(--font-heading);font-weight:600;font-size:17px">Layer Two Lounge</div>
+            <div style="font-size:14px;color:color-mix(in srgb,var(--color-text) 68%,transparent)">All played</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  
+  <div style="flex:none;border-top:1px solid var(--color-divider);display:flex;align-items:center;gap:28px;height:78px;padding:0 40px;background:var(--color-neutral-100)">
+    <span class="btn btn-icon btn-ghost" style="font-size:20px;flex:none" title="Open full screen"><i class="ph-duotone ph-caret-up"></i></span>
+    <div style="display:flex;align-items:center;gap:14px;width:280px;flex:none">
+      <div style="width:46px;height:46px;flex:none;border:1px solid var(--color-divider);display:flex;align-items:center;justify-content:center;font-family:var(--font-heading);font-weight:600;font-size:20px;color:color-mix(in srgb,var(--color-text) 70%,transparent)">S</div>
+      <div style="min-width:0">
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:color-mix(in srgb,var(--color-text) 60%,transparent)">Signal &amp; Noise</div>
+        <div style="font-family:var(--font-heading);font-weight:600;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Ecash, mints and the trust you can't avoid</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:18px;flex:none;font-size:22px">
+      <i class="ph-duotone ph-skip-back"></i>
+      <i class="ph-duotone ph-pause-circle" style="font-size:34px;color:var(--color-accent-700)"></i>
+      <i class="ph-duotone ph-skip-forward"></i>
+    </div>
+    <div style="flex:1;display:flex;align-items:center;gap:14px">
+      <span style="font-size:13px;font-variant-numeric:tabular-nums;color:color-mix(in srgb,var(--color-text) 65%,transparent)">21:14</span>
+      <div style="flex:1;height:2px;background:var(--color-neutral-300);position:relative"><div style="position:absolute;left:0;top:0;bottom:0;width:34%;background:var(--color-accent)"></div><div style="position:absolute;left:34%;top:-3px;width:8px;height:8px;border-radius:50%;background:var(--color-accent)"></div></div>
+      <span style="font-size:13px;font-variant-numeric:tabular-nums;color:color-mix(in srgb,var(--color-text) 65%,transparent)">42:07 left</span>
+    </div>
+    <sc-if value="{{ value }}" hint-placeholder-val="{{ true }}">
+    <div style="display:flex;align-items:center;gap:14px;flex:none">
+      <span style="font-size:13px;font-variant-numeric:tabular-nums;color:color-mix(in srgb,var(--color-text) 70%,transparent)">47 sats/min</span>
+      <span class="btn btn-primary" style="font-size:14px;padding:7px 16px"><i class="ph-duotone ph-lightning"></i>Boost</span>
+    </div>
+    </sc-if>
+  </div>
+</div>
+</div>
+
+<div>
+<p class="dv-cap">Library · Episodes (flat, newest first)</p>
+<div data-screen-label="2b Episodes" style="width:1120px;height:1010px;display:flex;flex-direction:column;background:var(--color-bg);color:var(--color-text);font-family:var(--font-body);box-shadow:var(--shadow-md);overflow:hidden">
+  
+  <div style="flex:1;display:flex;min-height:0">
+    <div style="width:262px;flex:none;border-right:1px solid var(--color-divider);padding:24px 26px 0;display:flex;flex-direction:column">
+      <span style="font-family:var(--font-heading);font-weight:600;font-size:24px;letter-spacing:-0.02em">Podcasts</span>
+      <div style="height:3px;background:var(--color-text);margin:14px 0 12px"></div>
+      <div style="display:flex;flex-direction:column;gap:7px;font-size:16px">
+        <span style="font-family:var(--font-heading);font-weight:600;color:var(--color-accent-700)">Library</span>
+        <span style="color:color-mix(in srgb,var(--color-text) 72%,transparent)">Search</span>
+        <span style="color:color-mix(in srgb,var(--color-text) 72%,transparent)">Downloads</span>
+      </div>
+      <div style="display:flex;align-items:baseline;justify-content:space-between;margin:28px 0 10px">
+        <span style="font-size:12px;text-transform:uppercase;letter-spacing:.12em;color:color-mix(in srgb,var(--color-text) 55%,transparent)">Subscriptions</span>
+        <span style="font-size:13px;color:var(--color-accent-2-700)">4 new</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:9px;font-size:15px">
+        <div style="display:flex;align-items:center;gap:9px"><sc-if value="{{ markers }}" hint-placeholder-val="{{ true }}"><span style="width:6px;height:6px;border-radius:50%;background:var(--color-accent-2);flex:none"></span></sc-if><span>Signal &amp; Noise</span></div>
+        <div style="display:flex;align-items:center;gap:9px"><sc-if value="{{ markers }}" hint-placeholder-val="{{ true }}"><span style="width:6px;height:6px;border-radius:50%;background:var(--color-accent-2);flex:none"></span></sc-if><span>The Mint</span></div>
+        <div style="display:flex;align-items:center;gap:9px"><sc-if value="{{ markers }}" hint-placeholder-val="{{ true }}"><span style="width:6px;height:6px;border-radius:50%;background:var(--color-accent-2);flex:none"></span></sc-if><span>Hard Money Weekly</span></div>
+        <div style="display:flex;align-items:center;gap:9px;padding-left:15px;color:color-mix(in srgb,var(--color-text) 65%,transparent)"><span>Nodes &amp; Nostr</span></div>
+        <div style="display:flex;align-items:center;gap:9px"><sc-if value="{{ markers }}" hint-placeholder-val="{{ true }}"><span style="width:6px;height:6px;border-radius:50%;background:var(--color-accent-2);flex:none"></span></sc-if><span>Sovereign Stack</span></div>
+        <div style="display:flex;align-items:center;gap:9px;padding-left:15px;color:color-mix(in srgb,var(--color-text) 65%,transparent)"><span>Layer Two Lounge</span></div>
+        <div style="display:flex;align-items:center;gap:9px;padding-left:15px;color:color-mix(in srgb,var(--color-text) 65%,transparent)"><span>Proof of Talk</span></div>
+        <div style="display:flex;align-items:center;gap:9px;padding-left:15px;color:color-mix(in srgb,var(--color-text) 65%,transparent)"><span>Sats &amp; Sensibility</span></div>
+      </div>
+    </div>
+
+    <div style="flex:1;min-width:0;display:flex;flex-direction:column;padding:24px 40px 0">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:20px">
+        <div class="seg" style="font-size:14px">
+          <span class="seg-opt" style="padding:6px 20px;color:color-mix(in srgb,var(--color-text) 70%,transparent)">Shows</span>
+          <span class="seg-opt" style="padding:6px 20px;background:var(--color-accent);color:var(--color-bg);font-weight:600">Episodes</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:16px">
+          <span style="font-size:14px;color:var(--color-accent-700)">Unplayed only</span>
+          <i class="ph-duotone ph-magnifying-glass" style="font-size:20px;color:var(--color-accent-700)"></i>
+        </div>
+      </div>
+      <div style="height:1px;background:var(--color-divider);margin:16px 0 0"></div>
+      <div style="flex:1;overflow:hidden">
+        <div style="display:grid;grid-template-columns:minmax(0,1fr) auto 44px;align-items:center;gap:0 22px;padding:16px 0;border-bottom:1px solid var(--color-divider)">
+          <div style="min-width:0">
+            <div style="display:flex;align-items:center;gap:9px;font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:color-mix(in srgb,var(--color-text) 62%,transparent)"><span style="width:6px;height:6px;border-radius:50%;background:var(--color-accent-2);flex:none"></span><span>Signal &amp; Noise</span></div>
+            <div style="font-family:var(--font-heading);font-weight:600;font-size:18px;margin-top:3px;cursor:pointer" style-hover="color:var(--color-accent-700);text-decoration:underline">Ecash, mints and the trust you can't avoid</div>
+            <div style="font-size:14px;color:color-mix(in srgb,var(--color-text) 70%,transparent);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Why a mint is still a custodian, and what that costs you in practice.</div>
+          </div>
+          <span style="font-size:14px;font-variant-numeric:tabular-nums;color:color-mix(in srgb,var(--color-text) 70%,transparent)">42 min left</span>
+          <span class="btn btn-icon btn-secondary" style="font-size:17px"><i class="ph-duotone ph-play"></i></span>
+        </div>
+        <div style="display:grid;grid-template-columns:minmax(0,1fr) auto 44px;align-items:center;gap:0 22px;padding:16px 0;border-bottom:1px solid var(--color-divider)">
+          <div style="min-width:0">
+            <div style="display:flex;align-items:center;gap:9px;font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:color-mix(in srgb,var(--color-text) 62%,transparent)"><span style="width:6px;height:6px;border-radius:50%;background:var(--color-accent-2);flex:none"></span><span>Hard Money Weekly</span></div>
+            <div style="font-family:var(--font-heading);font-weight:600;font-size:18px;margin-top:3px;cursor:pointer" style-hover="color:var(--color-accent-700);text-decoration:underline">The custody question nobody wants</div>
+            <div style="font-size:14px;color:color-mix(in srgb,var(--color-text) 70%,transparent);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Three ways people lose coins that have nothing to do with price.</div>
+          </div>
+          <span style="font-size:14px;font-variant-numeric:tabular-nums;color:color-mix(in srgb,var(--color-text) 70%,transparent)">1 h 04 left</span>
+          <span class="btn btn-icon btn-secondary" style="font-size:17px"><i class="ph-duotone ph-play"></i></span>
+        </div>
+        <div style="display:grid;grid-template-columns:minmax(0,1fr) auto 44px;align-items:center;gap:0 22px;padding:16px 0;border-bottom:1px solid var(--color-divider)">
+          <div style="min-width:0">
+            <div style="display:flex;align-items:center;gap:9px;font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:color-mix(in srgb,var(--color-text) 62%,transparent)"><span style="width:6px;height:6px;border-radius:50%;background:var(--color-accent-2);flex:none"></span><span>The Mint</span></div>
+            <div style="font-family:var(--font-heading);font-weight:600;font-size:18px;margin-top:3px;cursor:pointer" style-hover="color:var(--color-accent-700);text-decoration:underline">Blind signatures, explained slowly</div>
+            <div style="font-size:14px;color:color-mix(in srgb,var(--color-text) 70%,transparent);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">The one piece of cryptography worth understanding before you spend ecash.</div>
+          </div>
+          <span style="font-size:14px;font-variant-numeric:tabular-nums;color:color-mix(in srgb,var(--color-text) 70%,transparent)">28 min left</span>
+          <span class="btn btn-icon btn-secondary" style="font-size:17px"><i class="ph-duotone ph-play"></i></span>
+        </div>
+        <div style="display:grid;grid-template-columns:minmax(0,1fr) auto 44px;align-items:center;gap:0 22px;padding:16px 0;border-bottom:1px solid var(--color-divider)">
+          <div style="min-width:0">
+            <div style="font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:color-mix(in srgb,var(--color-text) 62%,transparent)">Sovereign Stack</div>
+            <div style="font-family:var(--font-heading);font-weight:600;font-size:18px;margin-top:3px;cursor:pointer" style-hover="color:var(--color-accent-700);text-decoration:underline">Running a node on a boat</div>
+            <div style="font-size:14px;color:color-mix(in srgb,var(--color-text) 70%,transparent);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Solar, starlink and a Raspberry Pi that has been wet twice.</div>
+          </div>
+          <span style="font-size:14px;font-variant-numeric:tabular-nums;color:color-mix(in srgb,var(--color-text) 70%,transparent)">55 min left</span>
+          <span class="btn btn-icon btn-secondary" style="font-size:17px"><i class="ph-duotone ph-play"></i></span>
+        </div>
+        <div style="display:grid;grid-template-columns:minmax(0,1fr) auto 44px;align-items:center;gap:0 22px;padding:16px 0;border-bottom:1px solid var(--color-divider)">
+          <div style="min-width:0">
+            <div style="font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:color-mix(in srgb,var(--color-text) 62%,transparent)">Nodes &amp; Nostr</div>
+            <div style="font-family:var(--font-heading);font-weight:600;font-size:18px;margin-top:3px;cursor:pointer" style-hover="color:var(--color-accent-700);text-decoration:underline">Relays are the new inbox</div>
+            <div style="font-size:14px;color:color-mix(in srgb,var(--color-text) 70%,transparent);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">What happens to your feed when the relay you rely on goes quiet.</div>
+          </div>
+          <span style="font-size:14px;font-variant-numeric:tabular-nums;color:color-mix(in srgb,var(--color-text) 70%,transparent)">12 min left</span>
+          <span class="btn btn-icon btn-secondary" style="font-size:17px"><i class="ph-duotone ph-play"></i></span>
+        </div>
+        <div style="display:grid;grid-template-columns:minmax(0,1fr) auto 44px;align-items:center;gap:0 22px;padding:16px 0">
+          <div style="min-width:0">
+            <div style="font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:color-mix(in srgb,var(--color-text) 62%,transparent)">Layer Two Lounge</div>
+            <div style="font-family:var(--font-heading);font-weight:600;font-size:18px;margin-top:3px;cursor:pointer" style-hover="color:var(--color-accent-700);text-decoration:underline">Channel liquidity for humans</div>
+            <div style="font-size:14px;color:color-mix(in srgb,var(--color-text) 70%,transparent);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Inbound, outbound, and why your payment failed at the worst moment.</div>
+          </div>
+          <span style="font-size:14px;font-variant-numeric:tabular-nums;color:color-mix(in srgb,var(--color-text) 70%,transparent)">1 h 18 left</span>
+          <span class="btn btn-icon btn-secondary" style="font-size:17px"><i class="ph-duotone ph-play"></i></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  
+  <div style="flex:none;border-top:1px solid var(--color-divider);display:flex;align-items:center;gap:28px;height:78px;padding:0 40px;background:var(--color-neutral-100)">
+    <span class="btn btn-icon btn-ghost" style="font-size:20px;flex:none" title="Open full screen"><i class="ph-duotone ph-caret-up"></i></span>
+    <div style="display:flex;align-items:center;gap:14px;width:280px;flex:none">
+      <div style="width:46px;height:46px;flex:none;border:1px solid var(--color-divider);display:flex;align-items:center;justify-content:center;font-family:var(--font-heading);font-weight:600;font-size:20px;color:color-mix(in srgb,var(--color-text) 70%,transparent)">S</div>
+      <div style="min-width:0">
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:color-mix(in srgb,var(--color-text) 60%,transparent)">Signal &amp; Noise</div>
+        <div style="font-family:var(--font-heading);font-weight:600;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Ecash, mints and the trust you can't avoid</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:18px;flex:none;font-size:22px">
+      <i class="ph-duotone ph-skip-back"></i>
+      <i class="ph-duotone ph-pause-circle" style="font-size:34px;color:var(--color-accent-700)"></i>
+      <i class="ph-duotone ph-skip-forward"></i>
+    </div>
+    <div style="flex:1;display:flex;align-items:center;gap:14px">
+      <span style="font-size:13px;font-variant-numeric:tabular-nums;color:color-mix(in srgb,var(--color-text) 65%,transparent)">21:14</span>
+      <div style="flex:1;height:2px;background:var(--color-neutral-300);position:relative"><div style="position:absolute;left:0;top:0;bottom:0;width:34%;background:var(--color-accent)"></div><div style="position:absolute;left:34%;top:-3px;width:8px;height:8px;border-radius:50%;background:var(--color-accent)"></div></div>
+      <span style="font-size:13px;font-variant-numeric:tabular-nums;color:color-mix(in srgb,var(--color-text) 65%,transparent)">42:07 left</span>
+    </div>
+    <sc-if value="{{ value }}" hint-placeholder-val="{{ true }}">
+    <div style="display:flex;align-items:center;gap:14px;flex:none">
+      <span style="font-size:13px;font-variant-numeric:tabular-nums;color:color-mix(in srgb,var(--color-text) 70%,transparent)">47 sats/min</span>
+      <span class="btn btn-primary" style="font-size:14px;padding:7px 16px"><i class="ph-duotone ph-lightning"></i>Boost</span>
+    </div>
+    </sc-if>
+  </div>
+</div>
+</div>
+
+</div>
+</div>
+
+<p class="dv-next">Try next: "print the covers as cmyk plates instead of halftone" · "drop the magenta dot and mark new episodes with a rule instead" · "add the expanded search screen to <a class="dv-oid" href="#2b">2b</a>"</p>
+</section>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;valueLayer&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Behaviour&quot;},&quot;manageAffordances&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Behaviour&quot;},&quot;newMarkers&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Behaviour&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      value: this.props.valueLayer ?? true,
+      manage: this.props.manageAffordances ?? true,
+      markers: this.props.newMarkers ?? true,
+    };
+  }
+}
+</script>
+</body>
+</html>
