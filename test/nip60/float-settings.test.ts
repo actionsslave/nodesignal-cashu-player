@@ -49,3 +49,24 @@ describe('Float-Einstellungen', () => {
     await expect(readActiveSource()).resolves.toBe('local');
   });
 });
+
+describe('kind:7376 (SFR-21)', () => {
+  beforeEach(async () => {
+    await resetDatabase();
+  });
+
+  it('ist ohne Zutun aus', async () => {
+    const { isHistoryEventsEnabled } = await import('../../src/nip60/float-settings.js');
+    await expect(isHistoryEventsEnabled()).resolves.toBe(false);
+  });
+
+  it('lässt sich einschalten und wieder aus', async () => {
+    const { isHistoryEventsEnabled, setHistoryEventsEnabled } = await import(
+      '../../src/nip60/float-settings.js'
+    );
+    await setHistoryEventsEnabled(true);
+    await expect(isHistoryEventsEnabled()).resolves.toBe(true);
+    await setHistoryEventsEnabled(false);
+    await expect(isHistoryEventsEnabled()).resolves.toBe(false);
+  });
+});

@@ -51,3 +51,23 @@ export async function writeActiveSource(source: ProofSource): Promise<void> {
   const db = await openDatabase();
   await db.put('settings', { key: QUELLE_KEY, value: source });
 }
+
+const VERLAUF_EVENTS_KEY = 'history.events';
+
+/**
+ * SFR-21: Optionale kind:7376-Events. Vorgabe aus.
+ *
+ * Der Verlauf dieser App liegt lokal und genügt der Anforderung. Ihn zusätzlich
+ * auf die Relays zu schreiben heisst, jede Zahlung dauerhaft zu hinterlegen —
+ * das ist eine Entscheidung des Nutzers, keine Vorgabe.
+ */
+export async function isHistoryEventsEnabled(): Promise<boolean> {
+  const db = await openDatabase();
+  const record = await db.get('settings', VERLAUF_EVENTS_KEY);
+  return record?.value === true;
+}
+
+export async function setHistoryEventsEnabled(enabled: boolean): Promise<void> {
+  const db = await openDatabase();
+  await db.put('settings', { key: VERLAUF_EVENTS_KEY, value: enabled });
+}

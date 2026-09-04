@@ -53,7 +53,9 @@ import {
   confirmFloatAmount,
   getFloatAmount,
   isFloatConfirmed,
+  isHistoryEventsEnabled,
   readActiveSource,
+  setHistoryEventsEnabled,
   writeActiveSource,
 } from './nip60/float-settings.js';
 import { LocalWallet } from './wallet/local-wallet.js';
@@ -114,6 +116,7 @@ function App() {
   const [leftover, setLeftover] = useState<FloatStateRecord | undefined>(undefined);
   const [rate, setRate] = useState(0);
   const [rateConfirmed, setRateConfirmed] = useState(false);
+  const [historyEvents, setHistoryEvents] = useState(false);
 
   /** SFR-20, SFR-31: quellenübergreifend, überlebt einen Quellenwechsel. */
   const [sessionSent, setSessionSent] = useState(0);
@@ -170,6 +173,7 @@ function App() {
     void isFloatConfirmed().then(setFloatConfirmed);
     void getStreamingRate().then(setRate);
     void isStreamingRateConfirmed().then(setRateConfirmed);
+    void isHistoryEventsEnabled().then(setHistoryEvents);
     void readActiveSource().then((gespeichert) => {
       if (gespeichert) setActiveSource(gespeichert);
     });
@@ -563,6 +567,11 @@ function App() {
         floatConfirmed={floatConfirmed}
         rate={rate}
         rateConfirmed={rateConfirmed}
+        historyEvents={historyEvents}
+        onToggleHistoryEvents={(enabled) => {
+          setHistoryEvents(enabled);
+          void setHistoryEventsEnabled(enabled);
+        }}
         onConfirmFloat={async (betrag) => {
           await confirmFloatAmount(betrag);
           setFloatAmount(betrag);
