@@ -87,7 +87,12 @@ export interface HistoryRecord {
   amount: number;
   at: number;
   status: 'gesendet' | 'ausstehend' | 'fehlgeschlagen' | 'empfangen';
-  kind: 'streaming' | 'boost' | 'import' | 'export';
+  /**
+   * SFR-21: die sechs Arten des Entwurfs. `float_out` und `float_in` sind die
+   * Wallet-Vorgaenge selbst, nicht Zahlungen — sie tragen deshalb keinen
+   * Empfaenger und keinen Status, sondern die geschriebenen Event-Arten.
+   */
+  kind: 'streaming' | 'boost' | 'import' | 'export' | 'float_out' | 'float_in';
   feedTitle?: string;
   episodeTitle?: string;
   /** SFR-32: aus welcher Quelle die Zahlung finanziert wurde. */

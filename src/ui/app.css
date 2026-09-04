@@ -268,3 +268,20 @@ h1, h2, h3, h4 { font-family: var(--font-heading); font-weight: 600; margin: 0; 
 /* ── Betragschips (5b 2) ── */
 .chips { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 16px; }
 .chips .tag { cursor: pointer; font-size: 14px; padding: 6px 14px; }
+
+/* ── Verlauf (SFR-21) ── */
+.history { font-size: 15px; }
+.history-head, .history-row {
+  display: grid; grid-template-columns: 110px 110px 160px 170px minmax(0, 1fr) 130px;
+  gap: 0 22px; align-items: baseline;
+}
+.history-head {
+  font-size: 12px; text-transform: uppercase; letter-spacing: 0.12em; padding-bottom: 8px;
+  color: color-mix(in srgb, var(--color-text) 55%, transparent);
+  border-bottom: 1px solid var(--color-divider);
+}
+.history-row { padding: 11px 0; border-bottom: 1px solid var(--color-divider); }
+.history-row:last-child { border-bottom: none; }
+.history-row .amount { font-variant-numeric: tabular-nums; }
+.history-row span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.history-row .sent { color: var(--color-accent-700); }

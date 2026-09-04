@@ -23,6 +23,7 @@ import type { StoredProof } from '../contracts/index.js';
 import { openDatabase } from '../db/database.js';
 import type { SignedNostrEvent, UnsignedNostrEvent } from '../identity/nip07.js';
 import type { NostrGateway } from '../payments/nostr-gateway.js';
+import { recordPayment } from '../wallet/history.js';
 import { LocalWallet } from '../wallet/local-wallet.js';
 import type { MintGateway } from '../wallet/mint-gateway.js';
 import { assertFloatAmount, planFloatTake, type TokenEventRef } from './float.js';
@@ -120,6 +121,16 @@ export class FloatService {
       openedAt: Date.now(),
     });
 
+    // SFR-21: Die Entnahme ist keine Zahlung, gehoert aber in den Verlauf —
+    // sie ist der Vorgang, der die Relays beschreibt.
+    await recordPayment({
+      direction: 'out',
+      amount,
+      kind: 'float_out',
+      status: 'gesendet',
+      source: 'nip60',
+    });
+
     return { amount, change: plan.change, mintUrl, consumedEventIds: plan.consumedEventIds };
   }
 
@@ -156,6 +167,13 @@ export class FloatService {
 
     await this.wallet.commit(bundle);
     await db.delete('floatState', 'current');
+    await recordPayment({
+      direction: 'in',
+      amount: bundle.amount,
+      kind: 'float_in',
+      status: 'empfangen',
+      source: 'nip60',
+    });
     return { amount: bundle.amount, mintUrl: state.mintUrl };
   }
 

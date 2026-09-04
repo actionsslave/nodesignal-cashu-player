@@ -26,6 +26,7 @@ import { BlockedSources } from './ui/blocked-sources.js';
 import { BoostDialog } from './ui/boost-dialog.js';
 import { ExportDialog } from './ui/export-dialog.js';
 import { Explainer, EmbeddedNotice } from './ui/explainer.js';
+import { HistoryView } from './ui/history-view.js';
 import {
   ConflictDialog,
   FirstTakeDialog,
@@ -57,12 +58,18 @@ import {
 } from './nip60/float-settings.js';
 import { LocalWallet } from './wallet/local-wallet.js';
 import { CashuMintGateway } from './wallet/cashu-mint-gateway.js';
+import { listHistory, recordPayment } from './wallet/history.js';
 import { mintOverview } from './wallet/mint-overview.js';
 import { readStorageMode } from './wallet/persistence.js';
 import { TokenImportError } from './wallet/mint-gateway.js';
 import { speicherText, untergrenzeText } from './wallet/messages.js';
 import { loadPosition } from './player/position-store.js';
-import { openDatabase, type EpisodeRecord, type FloatStateRecord } from './db/database.js';
+import {
+  openDatabase,
+  type EpisodeRecord,
+  type FloatStateRecord,
+  type HistoryRecord,
+} from './db/database.js';
 import type { PaymentTarget, ListeningTick } from './contracts/index.js';
 import './ui/app.css';
 
@@ -93,6 +100,7 @@ function App() {
   const [floatByMint, setFloatByMint] = useState<Record<string, number>>({});
   const [nip60, setNip60] = useState<Nip60Snapshot | undefined>(undefined);
   const [storageMode, setStorageMode] = useState<string | undefined>(undefined);
+  const [history, setHistory] = useState<HistoryRecord[]>([]);
   const [activeSource, setActiveSource] = useState<SourceId | undefined>(undefined);
   const [token, setToken] = useState('');
   const [importError, setImportError] = useState<string | undefined>(undefined);
@@ -135,7 +143,11 @@ function App() {
 
   const refreshWallet = useCallback(async () => {
     const db = await openDatabase();
-    const [proofs, mode] = await Promise.all([db.getAll('proofs'), readStorageMode()]);
+    const [proofs, mode, eintraege] = await Promise.all([
+      db.getAll('proofs'),
+      readStorageMode(),
+      listHistory(),
+    ]);
     const lokal: Record<string, number> = {};
     for (const row of mintOverview(proofs, 'local')) lokal[row.url] = row.balance;
     const float: Record<string, number> = {};
@@ -143,6 +155,7 @@ function App() {
     setLocalBalance(lokal);
     setFloatByMint(float);
     setStorageMode(mode);
+    setHistory(eintraege);
   }, []);
 
   const floatRemaining = useMemo(
@@ -389,6 +402,17 @@ function App() {
     const erster = liste[0];
     if (!erster) return;
     setCopied(false);
+    // SFR-21: Der Token ist ein Inhaberpapier — sobald er auf dem Schirm steht,
+    // hat ihn der Nutzer in der Hand. Das gehoert in den Verlauf, auch wenn die
+    // Proofs lokal liegen bleiben, bis sie jemand einloest.
+    await recordPayment({
+      direction: 'out',
+      amount: erster.amount,
+      kind: 'export',
+      status: 'gesendet',
+      source: 'local',
+    });
+    await refreshWallet();
     setDialog({
       art: 'export',
       amount: erster.amount,
@@ -550,6 +574,8 @@ function App() {
           setRateConfirmed(true);
         }}
       />
+
+      <HistoryView entries={history} />
 
       <Explainer />
 

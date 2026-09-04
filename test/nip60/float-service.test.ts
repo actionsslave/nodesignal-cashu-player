@@ -120,6 +120,19 @@ describe('FloatService', () => {
     await expect(db.get('floatState', 'current')).resolves.toBeUndefined();
   });
 
+  it('SFR-21: schreibt Entnahme und Rückgabe in den Verlauf', async () => {
+    const { service } = makeService();
+    await service.take({ amount: 500, mintUrl: MINT, events: [tokenEvent('ev-1', [1000])] });
+    await service.giveBack();
+
+    const db = await openDatabase();
+    const eintraege = await db.getAll('history');
+    expect(eintraege.map((e) => e.kind).sort()).toEqual(['float_in', 'float_out']);
+    // Beide gehoeren zur nostr-Wallet — sie verschieben nichts nach lokal.
+    expect(eintraege.every((e) => e.source === 'nip60')).toBe(true);
+    expect(eintraege.find((e) => e.kind === 'float_out')?.amount).toBe(500);
+  });
+
   it('SFR-17: eine zweite Rückgabe publiziert nichts', async () => {
     const { service, nostr } = makeService();
     await service.take({ amount: 500, mintUrl: MINT, events: [tokenEvent('ev-1', [1000])] });
