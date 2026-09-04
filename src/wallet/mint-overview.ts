@@ -8,6 +8,7 @@
 import { normalizeMintUrl } from '@cashu/cashu-ts';
 import { WALLET_UNIT } from '../config/build-config.js';
 import type { ProofRecord } from '../db/database.js';
+import type { ProofSource } from './local-wallet.js';
 
 export interface MintRow {
   url: string;
@@ -24,12 +25,17 @@ function canonical(url: string): string {
   }
 }
 
-export function mintOverview(proofs: ProofRecord[]): MintRow[] {
+/**
+ * SNR-09: Ohne `source` zaehlt alles zusammen — das waere die Summe beider
+ * Quellen und in der Anzeige eine Luege. Die Seite fragt deshalb je Quelle.
+ */
+export function mintOverview(proofs: ProofRecord[], source?: ProofSource): MintRow[] {
   const byMint = new Map<string, MintRow>();
 
   for (const record of proofs) {
     // Reservierte Proofs stecken in einer laufenden Zahlung und zaehlen nicht.
     if (record.state !== 'available') continue;
+    if (source !== undefined && (record.source ?? 'local') !== source) continue;
     const url = canonical(record.mintUrl);
     const row = byMint.get(url);
     if (row) {

@@ -64,8 +64,11 @@ export const STREAMING_INTERVAL_SECONDS = 60;
 /** SFR-27: Untergrenze der lokalen Wallet. */
 export const MIN_BALANCE_SATS = 10;
 
-/** Boost-Vorgabebeträge in Sat. */
-export const BOOST_PRESETS_SATS: readonly number[] = [210, 2100, 4200, 21000];
+/**
+ * Boost-Vorgabebeträge in Sat, wie im Handoff (5b-2). Vorgewählt ist der
+ * zweite Chip.
+ */
+export const BOOST_PRESETS_SATS: readonly number[] = [100, 500, 2100, 10_000];
 
 /** Maximale Länge der Boost-Nachricht. */
 export const BOOST_MESSAGE_MAX_LENGTH = 280;

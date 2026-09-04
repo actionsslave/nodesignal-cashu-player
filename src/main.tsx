@@ -1,19 +1,18 @@
 /**
- * SFR-05: eine einzige Seite ohne Routing. Aufbau nach Entwurf 5a — Kopf,
- * Aktuelle Folge mit Sticky-Streifen, Folgen, Zahlungsquelle.
+ * SFR-05: eine einzige Seite ohne Routing. Aufbau nach Entwurf 5a, die
+ * Zustände und Dialoge nach 5b.
  *
- * Verlauf, Einstellungen und die Erklärung stehen weiter unten und werden im
- * nächsten Schritt auf den Entwurf gezogen; die Anker im Index zeigen schon
- * dorthin.
+ * Hier steht die Zusammensetzung und der Ablauf einer Sitzung: wann der Float
+ * entnommen wird, wann er zurückgeht, welche Quelle zahlt. Die Regeln selbst
+ * stehen in den Modulen darunter — diese Datei entscheidet nichts über Geld,
+ * sie ruft nur in der richtigen Reihenfolge auf.
  */
 import { render } from 'preact';
-import { useCallback, useEffect, useMemo, useState } from 'preact/hooks';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import {
   ALLOWED_MINTS,
   DEMO_RELAYS,
-  FLOAT_DEFAULT_SATS,
   RECIPIENT_NPUB,
-  STREAMING_RATE_DEFAULT_SATS_PER_MINUTE,
   hasPlaceholders,
 } from './config/build-config.js';
 import snapshotJson from './feed/snapshot.json';
@@ -21,23 +20,50 @@ import type { FeedSnapshot } from './feed/snapshot-parse.js';
 import { loadEpisodes, type LoadedEpisodes } from './feed/episodes.js';
 import { Masthead } from './ui/masthead.js';
 import { EpisodeList } from './ui/episode-list.js';
-import { Player } from './ui/player.js';
+import { Player, episodeNumber, formatClock } from './ui/player.js';
 import { SourceSection } from './ui/source-section.js';
+import { BlockedSources } from './ui/blocked-sources.js';
+import { BoostDialog } from './ui/boost-dialog.js';
+import { ExportDialog } from './ui/export-dialog.js';
+import { Explainer, EmbeddedNotice } from './ui/explainer.js';
+import {
+  ConflictDialog,
+  FirstTakeDialog,
+  LeftoverFloat,
+  SwitchSourceDialog,
+} from './ui/float-dialogs.js';
 import { SettingsView } from './ui/settings-view.js';
-import { detectSigner, nip44Decrypt } from './identity/nip07.js';
+import { detectSigner, nip44Decrypt, nip44Encrypt, signEvent } from './identity/nip07.js';
+import { isEmbedded } from './identity/embedding.js';
 import { login, restoreSession, shortNpub, type Session } from './identity/session.js';
 import { evaluateSources, type SourceId } from './payments/source.js';
 import { resolvePaymentTarget } from './payments/resolve-target.js';
 import { SimplePoolGateway } from './payments/simple-pool-gateway.js';
+import { sendNutzap } from './payments/pay.js';
+import { StreamingController } from './payments/streaming.js';
+import {
+  confirmStreamingRate,
+  getStreamingRate,
+  isStreamingRateConfirmed,
+} from './payments/streaming-settings.js';
 import { readNip60Wallet, type Nip60Snapshot } from './nip60/read.js';
+import { FloatService } from './nip60/float-service.js';
+import {
+  confirmFloatAmount,
+  getFloatAmount,
+  isFloatConfirmed,
+  readActiveSource,
+  writeActiveSource,
+} from './nip60/float-settings.js';
 import { LocalWallet } from './wallet/local-wallet.js';
 import { CashuMintGateway } from './wallet/cashu-mint-gateway.js';
 import { mintOverview } from './wallet/mint-overview.js';
 import { readStorageMode } from './wallet/persistence.js';
 import { TokenImportError } from './wallet/mint-gateway.js';
+import { speicherText, untergrenzeText } from './wallet/messages.js';
 import { loadPosition } from './player/position-store.js';
-import { openDatabase, type EpisodeRecord } from './db/database.js';
-import type { PaymentTarget } from './contracts/index.js';
+import { openDatabase, type EpisodeRecord, type FloatStateRecord } from './db/database.js';
+import type { PaymentTarget, ListeningTick } from './contracts/index.js';
 import './ui/app.css';
 
 const snapshot = snapshotJson as FeedSnapshot;
@@ -47,39 +73,100 @@ const QUELLEN_NAME: Record<SourceId, string> = {
   local: 'Lokale Wallet',
 };
 
+/** Welcher Dialog offen ist. Immer höchstens einer. */
+type OpenDialog =
+  | { art: 'erste-entnahme'; danach: 'boost' | 'streaming' }
+  | { art: 'boost'; timecode: string }
+  | { art: 'wechsel'; ziel: SourceId }
+  | { art: 'konflikt'; events: number }
+  | { art: 'export'; amount: number; mintUrl: string; token: string }
+  | undefined;
+
 function App() {
   const [session, setSession] = useState<Session | undefined>(undefined);
   const [feed, setFeed] = useState<LoadedEpisodes | undefined>(undefined);
   const [positions, setPositions] = useState<Map<string, number>>(new Map());
   const [nowPlaying, setNowPlaying] = useState<EpisodeRecord | undefined>(undefined);
+  const [position, setPosition] = useState(0);
   const [target, setTarget] = useState<PaymentTarget | undefined>(undefined);
   const [localBalance, setLocalBalance] = useState<Record<string, number>>({});
+  const [floatByMint, setFloatByMint] = useState<Record<string, number>>({});
   const [nip60, setNip60] = useState<Nip60Snapshot | undefined>(undefined);
   const [storageMode, setStorageMode] = useState<string | undefined>(undefined);
   const [activeSource, setActiveSource] = useState<SourceId | undefined>(undefined);
   const [token, setToken] = useState('');
   const [importError, setImportError] = useState<string | undefined>(undefined);
-  const [exportToken, setExportToken] = useState<string | undefined>(undefined);
-  const [floatAmount] = useState(FLOAT_DEFAULT_SATS);
-  const [rate] = useState(STREAMING_RATE_DEFAULT_SATS_PER_MINUTE);
+  const [dialog, setDialog] = useState<OpenDialog>(undefined);
+  const [busy, setBusy] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const [floatAmount, setFloatAmount] = useState(0);
+  const [floatConfirmed, setFloatConfirmed] = useState(false);
+  /** SOQ-03: Rest einer abgebrochenen Sitzung, beim Laden angeboten. */
+  const [leftover, setLeftover] = useState<FloatStateRecord | undefined>(undefined);
+  const [rate, setRate] = useState(0);
+  const [rateConfirmed, setRateConfirmed] = useState(false);
+
+  /** SFR-20, SFR-31: quellenübergreifend, überlebt einen Quellenwechsel. */
+  const [sessionSent, setSessionSent] = useState(0);
+  const [streamingNote, setStreamingNote] = useState<string | undefined>(undefined);
 
   const signer = useMemo(() => detectSigner(), []);
+  const embedded = useMemo(() => isEmbedded(), []);
   const mintGateway = useMemo(() => new CashuMintGateway(), []);
   const nostr = useMemo(() => new SimplePoolGateway(), []);
-  const wallet = useMemo(() => new LocalWallet({ gateway: mintGateway }), [mintGateway]);
+  const localWallet = useMemo(() => new LocalWallet({ gateway: mintGateway }), [mintGateway]);
+  const floatWallet = useMemo(
+    () => new LocalWallet({ gateway: mintGateway, source: 'nip60' }),
+    [mintGateway],
+  );
+
+  const floatService = useMemo(() => {
+    if (!session) return undefined;
+    return new FloatService({
+      pubkeyHex: session.pubkeyHex,
+      relays: [...DEMO_RELAYS],
+      nostr,
+      mint: mintGateway,
+      encrypt: nip44Encrypt,
+      signEvent,
+    });
+  }, [session, nostr, mintGateway]);
 
   const refreshWallet = useCallback(async () => {
     const db = await openDatabase();
     const [proofs, mode] = await Promise.all([db.getAll('proofs'), readStorageMode()]);
-    const byMint: Record<string, number> = {};
-    for (const row of mintOverview(proofs)) byMint[row.url] = row.balance;
-    setLocalBalance(byMint);
+    const lokal: Record<string, number> = {};
+    for (const row of mintOverview(proofs, 'local')) lokal[row.url] = row.balance;
+    const float: Record<string, number> = {};
+    for (const row of mintOverview(proofs, 'nip60')) float[row.url] = row.balance;
+    setLocalBalance(lokal);
+    setFloatByMint(float);
     setStorageMode(mode);
   }, []);
+
+  const floatRemaining = useMemo(
+    () => Object.values(floatByMint).reduce((total, wert) => total + wert, 0),
+    [floatByMint],
+  );
 
   useEffect(() => {
     void restoreSession().then(setSession);
     void refreshWallet();
+    void getFloatAmount().then(setFloatAmount);
+    void isFloatConfirmed().then(setFloatConfirmed);
+    void getStreamingRate().then(setRate);
+    void isStreamingRateConfirmed().then(setRateConfirmed);
+    void readActiveSource().then((gespeichert) => {
+      if (gespeichert) setActiveSource(gespeichert);
+    });
+
+    // SOQ-03: Liegt beim Laden noch ein Float, wird er angeboten — nicht
+    // ausgeführt. Was mit dem Geld geschieht, entscheidet der Nutzer.
+    void openDatabase()
+      .then((db) => db.get('floatState', 'current'))
+      .then(setLeftover);
+
     // SFR-09: erst der Build-Stand, dann der Versuch eines frischen Abrufs.
     void loadEpisodes(snapshot).then(async (geladen) => {
       setFeed(geladen);
@@ -127,7 +214,8 @@ function App() {
   const sources = useMemo(
     () =>
       evaluateSources({
-        loggedIn: Boolean(session),
+        // SNR-05: Im iframe ist der Wallet-Betrieb aus — beide Quellen gesperrt.
+        loggedIn: Boolean(session) && !embedded,
         hasNip44: signer.nip44,
         walletEvent: nip60?.wallet,
         nip60BalanceByMint: nip60?.balanceByMint ?? {},
@@ -135,19 +223,160 @@ function App() {
         allowedMints: ALLOWED_MINTS,
         recipientMints: target?.status === 'resolved' ? target.mints : [],
       }),
-    [session, signer.nip44, nip60, localBalance, target],
+    [session, embedded, signer.nip44, nip60, localBalance, target],
   );
 
   useEffect(() => {
     if (!activeSource && sources.preferred) setActiveSource(sources.preferred);
   }, [activeSource, sources.preferred]);
 
+  const zahlbarerMint = useMemo(() => {
+    const state = activeSource === 'local' ? sources.local : sources.nip60;
+    return state.mints[0];
+  }, [activeSource, sources]);
+
+  /** Was die aktive Quelle für eine Zahlung hergibt. */
+  const verfuegbar = activeSource === 'nip60' ? floatRemaining : sources.local.balance;
+
+  // ── Float ───────────────────────────────────────────────────────────────
+
+  /**
+   * SFR-16, SNR-06: Die Entnahme geschieht bei der ersten Zahlungsabsicht,
+   * nie beim Laden der Seite, und erst nach der Bestätigung. Liefert false,
+   * wenn stattdessen der Dialog aufgeht.
+   */
+  const ensureFloat = useCallback(
+    async (danach: 'boost' | 'streaming'): Promise<boolean> => {
+      if (activeSource !== 'nip60') return true;
+      if (floatRemaining > 0) return true;
+      if (!floatConfirmed) {
+        setDialog({ art: 'erste-entnahme', danach });
+        return false;
+      }
+      await takeFloat();
+      return true;
+    },
+    [activeSource, floatRemaining, floatConfirmed],
+  );
+
+  async function takeFloat(): Promise<void> {
+    if (!floatService || !nip60 || !zahlbarerMint) return;
+    setBusy(true);
+    try {
+      await floatService.take({
+        amount: floatAmount,
+        mintUrl: zahlbarerMint,
+        events: nip60.tokenEvents,
+      });
+      await refreshWallet();
+    } catch (cause) {
+      // SFR-19: „bereits ausgegeben" heisst, ein anderer Client war schneller.
+      if (String(cause).includes('ausgegeben') || String(cause).includes('spent')) {
+        setDialog({ art: 'konflikt', events: nip60.tokenEvents.length });
+      } else {
+        setStreamingNote(cause instanceof Error ? cause.message : String(cause));
+      }
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  /**
+   * SFR-17: Idempotent. Der Auslöser kommt von mehreren Stellen — Tabwechsel,
+   * Seitenende, Ende der Wiedergabe, Knopf —, geschrieben wird höchstens einmal.
+   */
+  const giveBackFloat = useCallback(async (): Promise<void> => {
+    if (!floatService) return;
+    try {
+      await floatService.giveBack();
+    } finally {
+      await refreshWallet();
+    }
+  }, [floatService, refreshWallet]);
+
+  useEffect(() => {
+    if (!floatService) return;
+    const zurueck = () => void giveBackFloat();
+    const beiSichtwechsel = () => {
+      if (document.visibilityState === 'hidden') zurueck();
+    };
+    document.addEventListener('visibilitychange', beiSichtwechsel);
+    window.addEventListener('pagehide', zurueck);
+    return () => {
+      document.removeEventListener('visibilitychange', beiSichtwechsel);
+      window.removeEventListener('pagehide', zurueck);
+    };
+  }, [floatService, giveBackFloat]);
+
+  // ── Zahlungen ───────────────────────────────────────────────────────────
+
+  const walletFuerQuelle = activeSource === 'nip60' ? floatWallet : localWallet;
+
+  const zahle = useCallback(
+    async (amount: number, kind: 'streaming' | 'boost', content?: string) => {
+      if (!target || target.status !== 'resolved' || !nowPlaying) return 'fehlgeschlagen';
+      const ergebnis = await sendNutzap(
+        {
+          target,
+          amount,
+          kind,
+          content,
+          feedTitle: feed?.title,
+          episodeTitle: nowPlaying.title,
+          context: {
+            podcastTitle: feed?.title,
+            episodeTitle: nowPlaying.title,
+            episodeGuid: nowPlaying.guid,
+            positionSeconds: Math.floor(position),
+          },
+        },
+        {
+          wallet: walletFuerQuelle,
+          mintGateway,
+          nostr,
+          signEvent,
+        },
+      );
+      setSessionSent((bisher) => bisher + amount);
+      await refreshWallet();
+      return ergebnis.status;
+    },
+    [target, nowPlaying, feed, position, walletFuerQuelle, mintGateway, nostr, refreshWallet],
+  );
+
+  // SFR-23: Abrechnung je 60 Sekunden gehörter Zeit.
+  const streaming = useRef<StreamingController | undefined>(undefined);
+  useEffect(() => {
+    if (rate <= 0 || !rateConfirmed || !activeSource) {
+      streaming.current = undefined;
+      return;
+    }
+    streaming.current = new StreamingController({
+      rate,
+      send: async (amount) => {
+        if (!(await ensureFloat('streaming'))) return 'ausstehend';
+        const status = await zahle(amount, 'streaming');
+        return status === 'gesendet' ? 'gesendet' : 'ausstehend';
+      },
+      balance: async () => (activeSource === 'nip60' ? floatRemaining : localWallet.balance()),
+      onUpdate: (state) => {
+        // SFR-27: Unter der Untergrenze hält das Streaming an und sagt es.
+        setStreamingNote(state.stopped ? untergrenzeText() : undefined);
+      },
+    });
+  }, [rate, rateConfirmed, activeSource, floatRemaining, ensureFloat, zahle, localWallet]);
+
+  const onTick = useCallback((tick: ListeningTick) => {
+    void streaming.current?.handleTick(tick);
+  }, []);
+
   async function handleImport() {
     setImportError(undefined);
     try {
-      await wallet.importToken(token.trim());
+      await localWallet.importToken(token.trim());
       setToken('');
       await refreshWallet();
+      streaming.current?.resume();
     } catch (cause) {
       setImportError(
         cause instanceof TokenImportError ? cause.message : 'Der Import ist fehlgeschlagen.',
@@ -155,7 +384,34 @@ function App() {
     }
   }
 
+  async function handleExport() {
+    const liste = await localWallet.exportTokens();
+    const erster = liste[0];
+    if (!erster) return;
+    setCopied(false);
+    setDialog({
+      art: 'export',
+      amount: erster.amount,
+      mintUrl: erster.mintUrl,
+      token: erster.token,
+    });
+  }
+
+  /** SFR-31: Ein offener Float geht zurück, bevor die neue Quelle aktiv wird. */
+  function chooseSource(ziel: SourceId) {
+    if (ziel === activeSource) return;
+    if (activeSource === 'nip60' && floatRemaining > 0) {
+      setDialog({ art: 'wechsel', ziel });
+      return;
+    }
+    setActiveSource(ziel);
+    void writeActiveSource(ziel);
+  }
+
   const quelleAktiv = activeSource ? QUELLEN_NAME[activeSource] : 'keine gewählt';
+  const beideGesperrt = !sources.nip60.available && !sources.local.available;
+  const canBoost =
+    !beideGesperrt && Boolean(activeSource) && target?.status === 'resolved' && Boolean(nowPlaying);
 
   return (
     <div class="page">
@@ -165,6 +421,7 @@ function App() {
         feedFetchedAt={feed?.fetchedAt ?? snapshot.fetchedAt}
         feedStale={feed?.stale}
         sourceLabel={quelleAktiv}
+        loggedIn={Boolean(session)}
       />
 
       {hasPlaceholders() && (
@@ -176,17 +433,53 @@ function App() {
         </section>
       )}
 
+      {embedded && <EmbeddedNotice />}
+
       <Player
         episode={nowPlaying}
         podcastTitle={feed?.title}
         artworkUrl={nowPlaying ? feed?.imageUrl : undefined}
-        onPositionChange={() => undefined}
-        sessionSent={0}
-        floatRemaining={activeSource === 'nip60' ? 0 : undefined}
+        onTick={onTick}
+        onPositionChange={setPosition}
+        sessionSent={sessionSent}
+        floatRemaining={activeSource === 'nip60' ? floatRemaining : undefined}
         rate={rate}
         sourceNote={activeSource === 'local' ? 'aus der lokalen Wallet' : 'aus dem Float'}
-        canBoost={false}
+        /*
+         * Der Entwurf sieht hier „Keine Wallet-Events seit der Entnahme" vor.
+         * Die App fragt die Relays nach der Entnahme nicht erneut, koennte den
+         * Satz also nicht belegen — und ein unbelegter Satz ueber fremde
+         * Schreibzugriffe waere schlimmer als keiner. Bleibt weg, bis die
+         * Abfrage dasteht.
+         */
+        floatNote={undefined}
+        onWriteBackFloat={
+          floatRemaining > 0 && activeSource === 'nip60' ? () => void giveBackFloat() : undefined
+        }
+        onBoost={() => setDialog({ art: 'boost', timecode: formatClock(position) })}
+        canBoost={canBoost}
       />
+
+      {/* SOQ-03: nur, wenn tatsaechlich noch etwas liegt. */}
+      {leftover && floatRemaining > 0 && (
+        <LeftoverFloat
+          amount={floatRemaining}
+          mintUrl={leftover.mintUrl}
+          openedAt={leftover.openedAt}
+          busy={busy}
+          onReturn={() => {
+            setLeftover(undefined);
+            void giveBackFloat();
+          }}
+          onKeep={() => setLeftover(undefined)}
+        />
+      )}
+
+      {streamingNote && (
+        <section class="block">
+          <p class="fail">{streamingNote}</p>
+        </section>
+      )}
 
       <EpisodeList
         episodes={feed?.episodes ?? []}
@@ -195,28 +488,37 @@ function App() {
         onPlay={setNowPlaying}
       />
 
-      <SourceSection
-        sources={sources}
-        active={activeSource}
-        onChoose={setActiveSource}
-        floatRemaining={0}
-        floatAmount={floatAmount}
-        onChangeFloat={() => undefined}
-        sessionSent={0}
-        nip60BalanceByMint={nip60?.balanceByMint ?? {}}
-        localBalanceByMint={localBalance}
-        storageMode={storageMode}
-        token={token}
-        onTokenChange={setToken}
-        onImport={() => void handleImport()}
-        onExport={() => void wallet.exportTokens().then((liste) => setExportToken(liste[0]?.token))}
-        onPaste={() =>
-          void navigator.clipboard
-            ?.readText()
-            .then((text) => setToken(text.trim()))
-            .catch(() => undefined)
-        }
-      />
+      {beideGesperrt ? (
+        <BlockedSources
+          sources={sources}
+          token={token}
+          onTokenChange={setToken}
+          onImport={() => void handleImport()}
+        />
+      ) : (
+        <SourceSection
+          sources={sources}
+          active={activeSource}
+          onChoose={chooseSource}
+          floatRemaining={floatRemaining}
+          floatAmount={floatAmount}
+          onChangeFloat={() => document.getElementById('float')?.focus()}
+          sessionSent={sessionSent}
+          nip60BalanceByMint={nip60?.balanceByMint ?? {}}
+          localBalanceByMint={localBalance}
+          storageMode={storageMode}
+          token={token}
+          onTokenChange={setToken}
+          onImport={() => void handleImport()}
+          onExport={() => void handleExport()}
+          onPaste={() =>
+            void navigator.clipboard
+              ?.readText()
+              .then((text) => setToken(text.trim()))
+              .catch(() => undefined)
+          }
+        />
+      )}
 
       {importError && (
         <section class="block">
@@ -224,21 +526,145 @@ function App() {
         </section>
       )}
 
-      {exportToken && (
+      {/* SFR-26: nur zeigen, wenn der Browser dauerhaften Speicher verweigert. */}
+      {storageMode && storageMode !== 'dauerhaft' && (
         <section class="block">
-          <span class="kicker">Exportierter Token</span>
-          <p style={{ wordBreak: 'break-all', fontSize: '14px' }}>{exportToken}</p>
+          <span class="kicker">Speicher</span>
+          <p class="dialog-text">{speicherText(storageMode as 'best effort')}</p>
         </section>
       )}
 
       <SettingsView
         floatAmount={floatAmount}
-        floatConfirmed={false}
+        floatConfirmed={floatConfirmed}
         rate={rate}
-        rateConfirmed={false}
-        onConfirmFloat={async () => undefined}
-        onConfirmRate={async () => undefined}
+        rateConfirmed={rateConfirmed}
+        onConfirmFloat={async (betrag) => {
+          await confirmFloatAmount(betrag);
+          setFloatAmount(betrag);
+          setFloatConfirmed(true);
+        }}
+        onConfirmRate={async (satz) => {
+          await confirmStreamingRate(satz);
+          setRate(satz);
+          setRateConfirmed(true);
+        }}
       />
+
+      <Explainer />
+
+      {dialog?.art === 'erste-entnahme' && zahlbarerMint && (
+        <FirstTakeDialog
+          amount={floatAmount}
+          mintUrl={zahlbarerMint}
+          rate={rate}
+          showRiskNotice={!floatConfirmed}
+          busy={busy}
+          onConfirm={() => {
+            setDialog(undefined);
+            void confirmFloatAmount(floatAmount)
+              .then(() => setFloatConfirmed(true))
+              .then(takeFloat);
+          }}
+          onCancel={() => setDialog(undefined)}
+          onChangeAmount={() => {
+            setDialog(undefined);
+            document.getElementById('float')?.focus();
+          }}
+        />
+      )}
+
+      {dialog?.art === 'boost' && zahlbarerMint && (
+        <BoostDialog
+          episodeTitle={nowPlaying?.title ?? ''}
+          episodeNumber={nowPlaying ? episodeNumber(nowPlaying.title) : undefined}
+          podcastTitle={feed?.title ?? 'Nodesignal'}
+          timecode={dialog.timecode}
+          sourceLabel={activeSource === 'nip60' ? 'nostr-Wallet · Float' : 'Lokale Wallet'}
+          mintUrl={zahlbarerMint}
+          available={verfuegbar}
+          floatRemaining={activeSource === 'nip60' ? floatRemaining : undefined}
+          busy={busy}
+          onTopUpFloat={
+            activeSource === 'nip60'
+              ? () => {
+                  setDialog(undefined);
+                  void takeFloat();
+                }
+              : undefined
+          }
+          onSend={(amount, comment) => {
+            setDialog(undefined);
+            setBusy(true);
+            void ensureFloat('boost')
+              .then((bereit) => (bereit ? zahle(amount, 'boost', comment) : undefined))
+              .finally(() => setBusy(false));
+          }}
+          onCancel={() => setDialog(undefined)}
+        />
+      )}
+
+      {dialog?.art === 'wechsel' && (
+        <SwitchSourceDialog
+          floatRemaining={floatRemaining}
+          targetName={QUELLEN_NAME[dialog.ziel]}
+          targetBalance={dialog.ziel === 'local' ? sources.local.balance : sources.nip60.balance}
+          sessionSent={sessionSent}
+          busy={busy}
+          onConfirm={() => {
+            const ziel = dialog.ziel;
+            setDialog(undefined);
+            setBusy(true);
+            void giveBackFloat()
+              .then(() => {
+                setActiveSource(ziel);
+                return writeActiveSource(ziel);
+              })
+              .finally(() => setBusy(false));
+          }}
+          onCancel={() => setDialog(undefined)}
+        />
+      )}
+
+      {dialog?.art === 'konflikt' && (
+        <ConflictDialog
+          affectedEvents={dialog.events}
+          newBalance={sources.nip60.balance}
+          floatRemaining={floatRemaining}
+          onRetry={() => {
+            setDialog(undefined);
+            void takeFloat();
+          }}
+          onSwitchToLocal={() => {
+            setDialog(undefined);
+            setActiveSource('local');
+            void writeActiveSource('local');
+          }}
+          onCancel={() => setDialog(undefined)}
+        />
+      )}
+
+      {dialog?.art === 'export' && (
+        <ExportDialog
+          amount={dialog.amount}
+          mintUrl={dialog.mintUrl}
+          token={dialog.token}
+          copied={copied}
+          onCopy={() => {
+            void navigator.clipboard?.writeText(dialog.token).then(() => setCopied(true));
+          }}
+          onSaveFile={() => {
+            const blob = new Blob([dialog.token], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'cashu-token.txt';
+            link.click();
+            URL.revokeObjectURL(url);
+          }}
+          onCancel={() => setDialog(undefined)}
+        />
+      )}
     </div>
   );
 }

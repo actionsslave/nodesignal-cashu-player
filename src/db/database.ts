@@ -7,7 +7,7 @@ import { openDB, type DBSchema, type IDBPDatabase } from 'idb';
 import type { StoredProof } from '../contracts/index.js';
 
 export const DB_NAME = 'nodesignal-cashu-player';
-export const DB_VERSION = 3;
+export const DB_VERSION = 4;
 
 export const STORES = [
   'session',
@@ -66,6 +66,14 @@ export interface ProofRecord {
   secret: string;
   mintUrl: string;
   amount: number;
+  /**
+   * SNR-07, SNR-09: Woher dieses Guthaben stammt. Der Float liegt lokal, gehoert
+   * aber zur nostr-Wallet; ohne dieses Feld naehme ein Nutzap aus der lokalen
+   * Wallet Proofs des Floats mit und verschoebe Guthaben zwischen den Quellen.
+   * Fehlt es, stammt der Eintrag aus einer Fassung vor der Trennung und gehoert
+   * dem Nutzer, also der lokalen Wallet.
+   */
+  source?: 'nip60' | 'local';
   state: 'available' | 'reserved';
   /** Gesetzt, solange state === 'reserved'. */
   bundleId?: string;
@@ -184,6 +192,9 @@ export function openDatabase(): Promise<IDBPDatabase<PlayerDb>> {
         db.createObjectStore('tokenEvents', { keyPath: 'id' });
         db.createObjectStore('floatState', { keyPath: 'key' });
       }
+      // Version 4 fuegt ProofRecord.source hinzu. Bestehende Eintraege bleiben
+      // ohne das Feld liegen und gelten damit als lokal — genau richtig, denn
+      // vor der Trennung gab es nur die lokale Wallet. Kein Umschreiben noetig.
     },
   });
   return connection;

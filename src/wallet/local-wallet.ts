@@ -25,6 +25,7 @@ import {
   type StoredProof,
   type WalletService,
 } from '../contracts/index.js';
+import { bereitsEingeloestText, mintNichtErlaubtText, ungueltigText } from './messages.js';
 
 function sum(records: { amount: number }[]): number {
   return records.reduce((total, record) => total + record.amount, 0);
@@ -70,9 +71,14 @@ export interface ImportResult {
   mintUrl: string;
 }
 
+/** SNR-09: Welche der beiden Quellen eine Wallet-Instanz verwaltet. */
+export type ProofSource = 'nip60' | 'local';
+
 export interface LocalWalletOptions {
   gateway?: MintGateway;
   allowedMints?: readonly string[];
+  /** Vorgabe: die lokale Wallet. 'nip60' verwaltet den entnommenen Float. */
+  source?: ProofSource;
 }
 
 /**
@@ -104,10 +110,22 @@ function sameMint(a: string, b: string): boolean {
 export class LocalWallet implements WalletService {
   private readonly gateway?: MintGateway;
   private readonly allowedMints: readonly string[];
+  /**
+   * SNR-09: Welche Quelle diese Instanz verwaltet. Der Float der nostr-Wallet
+   * liegt im selben Store, ist aber eine eigene Quelle — beide Instanzen sehen
+   * einander nicht.
+   */
+  private readonly source: ProofSource;
 
   constructor(options: LocalWalletOptions = {}) {
     this.gateway = options.gateway;
     this.allowedMints = options.allowedMints ?? ALLOWED_MINTS;
+    this.source = options.source ?? 'local';
+  }
+
+  /** Ohne Angabe gilt ein Eintrag als lokal (siehe ProofRecord.source). */
+  private mine(record: ProofRecord): boolean {
+    return (record.source ?? 'local') === this.source;
   }
 
   private requireGateway(): MintGateway {
@@ -124,14 +142,14 @@ export class LocalWallet implements WalletService {
       mintUrl = metadata.mint;
       unit = metadata.unit;
     } catch (cause) {
-      throw new TokenImportError('ungueltig', 'Kein gültiger Cashu-Token.', { cause });
+      throw new TokenImportError('ungueltig', ungueltigText(), { cause });
     }
 
     // NR-07: nur Mints aus der eigenen erlaubten Liste.
     if (!this.allowedMints.some((allowed) => sameMint(allowed, mintUrl))) {
       throw new TokenImportError(
         'mint-nicht-erlaubt',
-        `Der Mint ${mintUrl} steht nicht in der erlaubten Liste.`,
+        mintNichtErlaubtText(mintUrl, this.allowedMints),
       );
     }
 
@@ -149,10 +167,7 @@ export class LocalWallet implements WalletService {
     let received: StoredProof[];
     try {
       if (await gateway.isTokenSpent(mintUrl, token)) {
-        throw new TokenImportError(
-          'bereits-eingeloest',
-          'Dieser Token wurde beim Mint bereits eingelöst.',
-        );
+        throw new TokenImportError('bereits-eingeloest', bereitsEingeloestText());
       }
       received = await gateway.receive(mintUrl, token);
     } catch (cause) {
@@ -194,6 +209,7 @@ export class LocalWallet implements WalletService {
         secret: proof.secret,
         mintUrl: canonical,
         amount,
+        source: this.source,
         state: 'available',
         proof,
       });
@@ -205,14 +221,15 @@ export class LocalWallet implements WalletService {
   async balance(): Promise<number> {
     const db = await openDatabase();
     const available = await db.getAllFromIndex('proofs', 'state', 'available');
-    return sum(available);
+    return sum(available.filter((record) => this.mine(record)));
   }
 
   async reserve(amount: number, mintUrl?: string): Promise<ProofBundle> {
     const db = await openDatabase();
     const tx = db.transaction('proofs', 'readwrite');
     const available = (await tx.store.index('state').getAll('available')).filter(
-      (record) => mintUrl === undefined || sameMint(record.mintUrl, mintUrl),
+      (record) =>
+        this.mine(record) && (mintUrl === undefined || sameMint(record.mintUrl, mintUrl)),
     );
 
     // Nach kanonischer URL gruppieren, nicht zeichengenau: So kommen auch
@@ -288,7 +305,8 @@ export class LocalWallet implements WalletService {
    */
   async exportTokens(): Promise<TokenExport[]> {
     const db = await openDatabase();
-    const available = await db.getAllFromIndex('proofs', 'state', 'available');
+    const alle = await db.getAllFromIndex('proofs', 'state', 'available');
+    const available = alle.filter((record) => this.mine(record));
 
     const byMint = new Map<string, ProofRecord[]>();
     for (const record of available) {

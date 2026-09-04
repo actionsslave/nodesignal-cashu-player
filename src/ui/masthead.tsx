@@ -28,6 +28,21 @@ export function formatFeedDate(iso: string): string {
   });
 }
 
+/**
+ * SFR-09: Der Text der mittleren Angabe.
+ *
+ * Ist der Snapshot von heute, ist der gescheiterte Laufzeit-Abruf keine
+ * Nachricht — der Bauzeit-Stand ist ja aktuell. Erst ein aelterer Stand
+ * zusammen mit einem gescheiterten Abruf ist eine Warnung wert.
+ */
+export function datelineFeed(fetchedAt: string, stale: boolean, now = new Date()): string {
+  const stand = new Date(fetchedAt);
+  const vonHeute = stand.toDateString() === now.toDateString();
+  return stale && !vonHeute
+    ? `Feed nicht erreichbar — Stand ${formatFeedDate(fetchedAt)}`
+    : `Feed-Stand ${formatFeedDate(fetchedAt)}`;
+}
+
 export interface MastheadProps {
   npubShort?: string;
   onLogin: () => void;
@@ -36,6 +51,8 @@ export interface MastheadProps {
   feedStale?: boolean;
   /** Dritte Angabe der Datumszeile: die aktive Quelle (SFR-12). */
   sourceLabel: string;
+  /** SFR-12: Ohne Anmeldung nennt die Zeile den Zustand, nicht den Feed-Stand. */
+  loggedIn: boolean;
 }
 
 export function Masthead({
@@ -44,6 +61,7 @@ export function Masthead({
   feedFetchedAt,
   feedStale,
   sourceLabel,
+  loggedIn,
 }: MastheadProps) {
   const [active, setActive] = useState(INDEX_LINKS[0].id);
 
@@ -91,13 +109,19 @@ export function Masthead({
 
       <div class="masthead-rule" />
       <div class="dateline">
-        <span>Value for Value mit Ecash</span>
-        <span>
-          {feedStale
-            ? `Feed nicht erreichbar — Stand ${formatFeedDate(feedFetchedAt)}`
-            : `Feed-Stand ${formatFeedDate(feedFetchedAt)}`}
-        </span>
-        <span>Quelle: {sourceLabel}</span>
+        {loggedIn ? (
+          <>
+            <span>Value for Value mit Ecash</span>
+            <span>{datelineFeed(feedFetchedAt, feedStale === true)}</span>
+            <span>Quelle: {sourceLabel}</span>
+          </>
+        ) : (
+          <>
+            <span>Nicht angemeldet</span>
+            <span>Wiedergabe frei</span>
+            <span>Zahlungen aus</span>
+          </>
+        )}
       </div>
       <div class="hairline" />
     </header>

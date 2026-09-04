@@ -4,6 +4,7 @@ import { LocalWallet } from '../../src/wallet/local-wallet.js';
 import { TokenImportError } from '../../src/wallet/mint-gateway.js';
 import { resetDatabase } from '../helpers/db.js';
 import { encodeToken, fakeGateway, freshProofs } from '../helpers/mint.js';
+import { mintLabel } from '../../src/wallet/messages.js';
 
 const ERLAUBT = 'https://mint-a.example';
 const NICHT_ERLAUBT = 'https://fremder-mint.example';
@@ -44,7 +45,8 @@ describe('FR-17: Wallet per Token aufladen', () => {
     const error = await wallet.importToken(encodeToken(NICHT_ERLAUBT, [10])).catch((e) => e);
     expect(error).toBeInstanceOf(TokenImportError);
     expect(error.reason).toBe('mint-nicht-erlaubt');
-    expect(error.message).toContain(NICHT_ERLAUBT);
+    // Der Entwurf schreibt den Mint ohne Protokoll — genannt ist er damit.
+    expect(error.message).toContain(mintLabel(NICHT_ERLAUBT));
   });
 
   it('US-04-AC-4: ein abgelehnter Import verändert das Guthaben nicht', async () => {
