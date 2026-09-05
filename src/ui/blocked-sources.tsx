@@ -17,6 +17,8 @@ export const BLOCKED_REASON: Record<SourceUnavailable, string> = {
     'Deine Extension bietet kein nip44. Ohne das lässt sich die nostr-Wallet nicht entschlüsseln.',
   'keine-wallet':
     'Zu deinem npub wurde kein kind:17375 gefunden. Der Player legt keine Wallet an. Wenn du in einem anderen Client eine nostr-Wallet einrichtest, erscheint sie hier.',
+  'wallet-unlesbar':
+    'Dein kind:17375 wurde gefunden, liess sich aber nicht entschlüsseln. Erlaube der Extension die nip44-Entschlüsselung und lade die Wallet neu.',
   'keine-mint-schnittmenge':
     'Es gibt keinen gemeinsamen Mint zwischen deiner Wallet, der erlaubten Liste und Nodesignals kind:10019.',
   'kein-guthaben': '',

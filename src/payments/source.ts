@@ -23,6 +23,8 @@ export type SourceUnavailable =
   | 'kein-nip44'
   /** SFR-13: der Nutzer hat kein kind:17375. Betrifft nur NIP-60. */
   | 'keine-wallet'
+  /** SFR-13: Es gibt ein kind:17375, aber es liess sich nicht entschluesseln. */
+  | 'wallet-unlesbar'
   /** SFR-15, SFR-30: kein Mint, den alle Beteiligten akzeptieren. */
   | 'keine-mint-schnittmenge'
   /** Mints passen, aber bei keinem liegt Guthaben. */
@@ -41,8 +43,10 @@ export interface SourceState {
 export interface SourceInput {
   loggedIn: boolean;
   hasNip44: boolean;
-  /** Aus kind:17375; undefined heißt: der Nutzer hat keine NIP-60-Wallet. */
+  /** Aus kind:17375; undefined heißt: keine lesbare NIP-60-Wallet. */
   walletEvent?: WalletDescriptor;
+  /** Unterscheidet „keine Wallet" von „Wallet unlesbar" (SFR-29). */
+  walletUnreadable?: boolean;
   nip60BalanceByMint: Record<string, number>;
   localBalanceByMint: Record<string, number>;
   allowedMints: readonly string[];
@@ -110,7 +114,11 @@ export function evaluateSources(input: SourceInput): SourceEvaluation {
   const nip60Blocker =
     nichtAngemeldet ??
     (!input.hasNip44 ? ('kein-nip44' as const) : undefined) ??
-    (!input.walletEvent ? ('keine-wallet' as const) : undefined);
+    (!input.walletEvent
+      ? input.walletUnreadable
+        ? ('wallet-unlesbar' as const)
+        : ('keine-wallet' as const)
+      : undefined);
 
   const nip60 = build('nip60', nip60Blocker, nip60Mints, input.nip60BalanceByMint);
   const local = build('local', nichtAngemeldet, localMints, input.localBalanceByMint);

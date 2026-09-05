@@ -18,8 +18,22 @@ describe('SFR-13: kind:17375 auswerten', () => {
     });
   });
 
-  it('liefert nichts ohne Privkey — ohne ihn ist die Wallet nicht benutzbar', () => {
-    expect(parseWalletEvent(JSON.stringify([['mint', MINT_A]]))).toBeUndefined();
+  /*
+   * Der Privkey aus NIP-60 entsperrt P2PK-Ecash — er wird beim *Empfangen* von
+   * Nutzaps gebraucht. Dieser Player empfaengt keine (SNR-04); er gibt die
+   * gewoehnlichen Proofs aus den kind:7375 aus, und dafuer braucht es ihn
+   * nicht. Ihn zu verlangen hiesse, eine funktionierende Wallet fuer
+   * nichtexistent zu erklaeren.
+   */
+  it('liest eine Wallet auch ohne Privkey — zum Ausgeben wird er nicht gebraucht', () => {
+    expect(parseWalletEvent(JSON.stringify([['mint', MINT_A]]))).toEqual({
+      privkey: undefined,
+      mints: [MINT_A],
+    });
+  });
+
+  it('liefert nichts, wenn der Inhalt kein Tag-Array ist', () => {
+    expect(parseWalletEvent(JSON.stringify({ mint: MINT_A }))).toBeUndefined();
   });
 
   it('liefert nichts bei unlesbarem Inhalt', () => {

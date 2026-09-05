@@ -8,6 +8,13 @@ import type { StoredProof } from '../contracts/index.js';
 export interface MintGateway {
   /** NUT-07: Ist der Token beim Mint schon eingelöst? */
   isTokenSpent(mintUrl: string, token: string): Promise<boolean>;
+  /**
+   * NUT-07 je Proof: Welche dieser Secrets kennt der Mint als ausgegeben?
+   *
+   * Feiner als isTokenSpent, und das ist noetig: Ein einziger ausgegebener
+   * Proof duerfte nicht die unverbrauchten seines Buendels mitreissen.
+   */
+  spentSecrets(mintUrl: string, proofs: StoredProof[]): Promise<string[]>;
   /** NUT-03: Token einlösen, frische Proofs für diese Wallet erhalten. */
   receive(mintUrl: string, token: string): Promise<StoredProof[]>;
   /**

@@ -20,8 +20,15 @@ export const TOKEN_KIND = 7375;
 export const HISTORY_KIND = 7376;
 
 export interface WalletDescriptor {
-  /** SNR-03: verlässt den Speicher der Seite nicht. */
-  privkey: string;
+  /**
+   * SNR-03: verlässt den Speicher der Seite nicht.
+   *
+   * Optional, weil er nur zum *Empfangen* von Nutzaps gebraucht wird: Er
+   * entsperrt P2PK-Ecash. Dieser Player empfängt keine (SNR-04) und gibt die
+   * gewöhnlichen Proofs aus den kind:7375 aus. Eine Wallet ohne ihn ist für
+   * uns voll benutzbar.
+   */
+  privkey?: string;
   mints: string[];
 }
 
@@ -45,9 +52,8 @@ function canonical(url: string): string {
  * SFR-13: Der Inhalt ist eine Liste von Tags, wie im Event selbst —
  * `[["privkey", "…"], ["mint", "https://…"], …]`.
  *
- * Ohne Privkey liefert die Funktion nichts: Eine Wallet, deren Schlüssel wir
- * nicht haben, lässt sich nicht ausgeben, und eine halbe Wallet anzuzeigen
- * wäre irreführend.
+ * Der Privkey ist optional — siehe WalletDescriptor. Nichts liefert die
+ * Funktion nur, wenn der Inhalt gar kein Tag-Array ist.
  */
 export function parseWalletEvent(plaintext: string): WalletDescriptor | undefined {
   let tags: unknown;
@@ -63,10 +69,7 @@ export function parseWalletEvent(plaintext: string): WalletDescriptor | undefine
       .filter((tag): tag is string[] => Array.isArray(tag) && tag[0] === name && Boolean(tag[1]))
       .map((tag) => tag[1]);
 
-  const privkey = werte('privkey')[0];
-  if (!privkey) return undefined;
-
-  return { privkey, mints: werte('mint') };
+  return { privkey: werte('privkey')[0], mints: werte('mint') };
 }
 
 /** SFR-14: Der Inhalt eines kind:7375 ist ein Objekt, kein Tag-Array. */

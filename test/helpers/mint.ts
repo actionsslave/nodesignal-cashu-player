@@ -29,6 +29,8 @@ export interface FakeGatewayOptions {
   received?: StoredProof[];
   /** Mint ohne NUT-11: der Swap wird abgelehnt, bevor er stattfindet. */
   ohneP2pk?: boolean;
+  /** NUT-07: Secrets, die der Mint als ausgegeben kennt. */
+  spentSecrets?: string[];
 }
 
 /** Ersetzt nur die Netzwerkschicht; die Wallet-Logik läuft echt. */
@@ -37,6 +39,11 @@ export function fakeGateway(options: FakeGatewayOptions = {}): MintGateway {
     async isTokenSpent(mintUrl) {
       if (options.unreachable) throw new MintUnreachableError(mintUrl);
       return options.spent ?? false;
+    },
+    async spentSecrets(mintUrl, proofs) {
+      if (options.unreachable) throw new MintUnreachableError(mintUrl);
+      const bekannt = new Set(options.spentSecrets ?? []);
+      return proofs.map((p) => String(p.secret)).filter((secret) => bekannt.has(secret));
     },
     async receive(mintUrl, token) {
       if (options.unreachable) throw new MintUnreachableError(mintUrl);

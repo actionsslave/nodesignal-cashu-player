@@ -20,6 +20,8 @@ export const REASON_TEXT: Record<SourceUnavailable, string> = {
     'Deine Extension bietet kein nip44. Ohne das lässt sich die nostr-Wallet nicht entschlüsseln.',
   'keine-wallet':
     'Zu deinem npub gibt es kein kind:17375. Dieser Player legt keine Wallet an.',
+  'wallet-unlesbar':
+    'Dein kind:17375 wurde gefunden, liess sich aber nicht entschlüsseln. Erlaube der Extension die nip44-Entschlüsselung und lade die Wallet neu.',
   'keine-mint-schnittmenge':
     'Kein Mint, den alle drei Seiten annehmen. Ohne gemeinsamen Mint kommt der Nutzap nicht an.',
   'kein-guthaben': 'Kein Guthaben bei einem der nutzbaren Mints.',
@@ -49,6 +51,9 @@ export interface SourceSectionProps {
    * anvertraut, soll lesen können, auf welche Relays es zurückgeht.
    */
   walletRelays?: string[];
+  /** SFR-13: Die Wallet noch einmal von den Relays holen. */
+  onReloadWallet?: () => void;
+  walletBusy?: boolean;
   nip60BalanceByMint: Record<string, number>;
   localBalanceByMint: Record<string, number>;
   storageMode?: string;
@@ -98,6 +103,8 @@ export function SourceSection({
   onChangeFloat,
   sessionSent,
   walletRelays,
+  onReloadWallet,
+  walletBusy,
   nip60BalanceByMint,
   localBalanceByMint,
   storageMode,
@@ -127,6 +134,17 @@ export function SourceSection({
           </label>
           <h4>{nip60 ? 'nostr-Wallet (NIP-60)' : 'Lokale Wallet'}</h4>
           <span class={tag.klasse}>{tag.text}</span>
+          {nip60 && onReloadWallet && (
+            <button
+              type="button"
+              class="btn btn-ghost"
+              style={{ marginLeft: 'auto' }}
+              disabled={walletBusy}
+              onClick={onReloadWallet}
+            >
+              {walletBusy ? 'Lädt…' : 'Neu laden'}
+            </button>
+          )}
         </div>
 
         <p class="balance">

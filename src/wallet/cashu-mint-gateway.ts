@@ -51,6 +51,18 @@ export class CashuMintGateway implements MintGateway {
   }
 
   /** NUT-07: Statusabfrage, damit FR-17 "bereits eingelöst" konkret melden kann. */
+  /** NUT-07 je Proof — Grundlage von pruneSpentProofs. */
+  async spentSecrets(mintUrl: string, proofs: StoredProof[]): Promise<string[]> {
+    if (proofs.length === 0) return [];
+    const wallet = await this.walletFor(mintUrl);
+    return mapNetworkError(mintUrl, async () => {
+      const states = await wallet.checkProofsStates(proofs);
+      return proofs
+        .filter((_proof, index) => states[index]?.state === CheckStateEnum.SPENT)
+        .map((proof) => String(proof.secret));
+    });
+  }
+
   async isTokenSpent(mintUrl: string, token: string): Promise<boolean> {
     const wallet = await this.walletFor(mintUrl);
     return mapNetworkError(mintUrl, async () => {

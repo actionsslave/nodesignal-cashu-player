@@ -60,7 +60,7 @@ import {
   setHistoryEventsEnabled,
   writeActiveSource,
 } from './nip60/float-settings.js';
-import { LocalWallet } from './wallet/local-wallet.js';
+import { LocalWallet, type ExportOffer } from './wallet/local-wallet.js';
 import { CashuMintGateway } from './wallet/cashu-mint-gateway.js';
 import { listHistory, recordPayment } from './wallet/history.js';
 import { mintOverview } from './wallet/mint-overview.js';
@@ -90,7 +90,7 @@ type OpenDialog =
   | { art: 'boost'; timecode: string }
   | { art: 'wechsel'; ziel: SourceId }
   | { art: 'konflikt'; events: number }
-  | { art: 'export'; amount: number; mintUrl: string; token: string }
+  | { art: 'export'; offer: ExportOffer }
   | undefined;
 
 function App() {
@@ -184,7 +184,12 @@ function App() {
 
   useEffect(() => {
     void restoreSession().then(setSession);
-    void refreshWallet();
+    // NUT-07 zuerst: Was der Mint als ausgegeben kennt, darf gar nicht erst
+    // als Guthaben erscheinen.
+    void localWallet
+      .pruneSpentProofs()
+      .catch(() => 0)
+      .then(() => refreshWallet());
     void getFloatAmount().then(setFloatAmount);
     void isFloatConfirmed().then(setFloatConfirmed);
     void getStreamingRate().then(setRate);
@@ -211,7 +216,7 @@ function App() {
       });
       setPositions(map);
     });
-  }, [refreshWallet]);
+  }, [refreshWallet, localWallet]);
 
   // Der Empfänger steht fest: genau ein Podcast (SFR-04).
   useEffect(() => {
@@ -280,6 +285,7 @@ function App() {
         loggedIn: Boolean(session) && !embedded,
         hasNip44: signer.nip44,
         walletEvent: nip60?.wallet,
+        walletUnreadable: nip60?.walletStatus === 'unlesbar',
         nip60BalanceByMint: nip60?.balanceByMint ?? {},
         localBalanceByMint: localBalance,
         allowedMints: ALLOWED_MINTS,
@@ -480,27 +486,31 @@ function App() {
   }
 
   async function handleExport() {
-    const liste = await localWallet.exportTokens();
-    const erster = liste[0];
-    if (!erster) return;
+    const angebot = await localWallet.beginExport();
+    if (!angebot) return;
     setCopied(false);
-    // SFR-21: Der Token ist ein Inhaberpapier — sobald er auf dem Schirm steht,
-    // hat ihn der Nutzer in der Hand. Das gehoert in den Verlauf, auch wenn die
-    // Proofs lokal liegen bleiben, bis sie jemand einloest.
-    await recordPayment({
-      direction: 'out',
-      amount: erster.amount,
-      kind: 'export',
-      status: 'gesendet',
-      source: 'local',
-    });
+    // Das Guthaben ist ab jetzt reserviert und zaehlt nicht mehr mit. Endgueltig
+    // weg ist es erst, wenn der Nutzer den Token kopiert oder gespeichert hat.
     await refreshWallet();
-    setDialog({
-      art: 'export',
-      amount: erster.amount,
-      mintUrl: erster.mintUrl,
-      token: erster.token,
-    });
+    setDialog({ art: 'export', offer: angebot });
+  }
+
+  /** SFR-25: Der Nutzer hat den Token — jetzt ist er hier nichts mehr wert. */
+  async function finishExport(offer: ExportOffer, behalten: boolean) {
+    setDialog(undefined);
+    if (behalten) {
+      await localWallet.completeExport(offer);
+      await recordPayment({
+        direction: 'out',
+        amount: offer.amount,
+        kind: 'export',
+        status: 'gesendet',
+        source: 'local',
+      });
+    } else {
+      await localWallet.cancelExport(offer);
+    }
+    await refreshWallet();
   }
 
   /** SFR-31: Ein offener Float geht zurück, bevor die neue Quelle aktiv wird. */
@@ -628,6 +638,8 @@ function App() {
           onChangeFloat={() => document.getElementById('float')?.focus()}
           sessionSent={sessionSent}
           walletRelays={walletRelays}
+          onReloadWallet={signer.nip44 && session ? () => void readWallet() : undefined}
+          walletBusy={walletBusy}
           nip60BalanceByMint={nip60?.balanceByMint ?? {}}
           localBalanceByMint={localBalance}
           storageMode={storageMode}
@@ -777,25 +789,28 @@ function App() {
 
       {dialog?.art === 'export' && (
         <ExportDialog
-          amount={dialog.amount}
-          mintUrl={dialog.mintUrl}
-          token={dialog.token}
+          amount={dialog.offer.amount}
+          mintUrl={dialog.offer.mintUrl}
+          token={dialog.offer.token}
           copied={copied}
           onCopy={() => {
-            void navigator.clipboard?.writeText(dialog.token).then(() => setCopied(true));
+            void navigator.clipboard?.writeText(dialog.offer.token).then(() => setCopied(true));
           }}
           onSaveFile={() => {
-            const blob = new Blob([dialog.token], { type: 'text/plain' });
+            const blob = new Blob([dialog.offer.token], { type: 'text/plain' });
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.href = url;
             link.download = 'cashu-token.txt';
             link.click();
             URL.revokeObjectURL(url);
+            setCopied(true);
           }}
-          onCancel={() => setDialog(undefined)}
+          onDone={() => void finishExport(dialog.offer, true)}
+          onCancel={() => void finishExport(dialog.offer, false)}
         />
       )}
+
     </div>
   );
 }

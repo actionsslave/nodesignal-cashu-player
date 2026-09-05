@@ -34,8 +34,17 @@ export interface ReadNip60Deps {
   decrypt: (pubkey: string, ciphertext: string) => Promise<string>;
 }
 
+/**
+ * SFR-29: Warum keine Wallet dasteht — der Unterschied ist keine Feinheit.
+ * „Keine" heisst: Es gibt kein kind:17375, und die App legt keines an (SNR-01).
+ * „Unlesbar" heisst: Es gibt eines, aber die Extension hat es nicht
+ * entschluesselt. Wer das eine fuer das andere haelt, sucht am falschen Ende.
+ */
+export type WalletStatus = 'gefunden' | 'keine' | 'unlesbar';
+
 export interface Nip60Snapshot {
-  /** Undefined heißt: kein kind:17375 gefunden. Die App legt keines an. */
+  walletStatus: WalletStatus;
+  /** Undefined heißt: keine lesbare Wallet. Die App legt keine an. */
   wallet?: WalletDescriptor;
   /** Die gelesenen Token-Events, für die Float-Planung. */
   tokenEvents: { id: string; content: TokenEventContent }[];
@@ -44,26 +53,24 @@ export interface Nip60Snapshot {
   unreadableEvents: number;
 }
 
-const LEER: Nip60Snapshot = {
+const leer = (walletStatus: WalletStatus): Nip60Snapshot => ({
+  walletStatus,
   wallet: undefined,
   tokenEvents: [],
   balanceByMint: {},
   unreadableEvents: 0,
-};
+});
 
 export async function readNip60Wallet(deps: ReadNip60Deps): Promise<Nip60Snapshot> {
   const walletEvent = await deps.gateway.fetchEvent(deps.relays, {
     kinds: [WALLET_KIND],
     authors: [deps.pubkeyHex],
   });
-  if (!walletEvent) return LEER;
+  if (!walletEvent) return leer('keine');
 
-  const wallet = await entschluesseln(walletEvent, deps).then((klartext) =>
-    klartext === undefined ? undefined : parseWalletEvent(klartext),
-  );
-  // Ohne Privkey ist das Guthaben nicht ausgebbar. Es anzuzeigen waere
-  // irrefuehrend, also wird gar nicht erst nach Token-Events gefragt.
-  if (!wallet) return LEER;
+  const klartext = await entschluesseln(walletEvent, deps);
+  const wallet = klartext === undefined ? undefined : parseWalletEvent(klartext);
+  if (!wallet) return leer('unlesbar');
 
   const rohe = await deps.gateway.fetchEvents(deps.relays, {
     kinds: [TOKEN_KIND],
@@ -87,6 +94,7 @@ export async function readNip60Wallet(deps: ReadNip60Deps): Promise<Nip60Snapsho
   await rememberTokenEvents(tokenEvents);
 
   return {
+    walletStatus: 'gefunden',
     wallet,
     tokenEvents,
     balanceByMint: balanceByMint(tokenEvents.map((entry) => entry.content)),

@@ -165,3 +165,46 @@ describe('SFR-14: kind:7375 lesen und zuordnen', () => {
     expect(g.fetchEvents).not.toHaveBeenCalled();
   });
 });
+
+describe('SFR-29: der Grund muss stimmen', () => {
+  /*
+   * Eine Wallet, die dasteht, sich aber nicht entschluesseln laesst, ist etwas
+   * anderes als keine Wallet. Der Satz „Zu deinem npub gibt es kein kind:17375"
+   * waere hier schlicht falsch — und schickte den Nutzer auf die Suche nach
+   * einem Problem, das er nicht hat.
+   */
+  it('meldet „keine", wenn kein kind:17375 dasteht', async () => {
+    const snapshot = await readNip60Wallet({
+      pubkeyHex: PUBKEY,
+      relays: ['wss://r.example'],
+      gateway: gateway(undefined, []),
+      decrypt,
+    });
+    expect(snapshot.walletStatus).toBe('keine');
+  });
+
+  it('meldet „unlesbar", wenn die Entschluesselung scheitert', async () => {
+    const snapshot = await readNip60Wallet({
+      pubkeyHex: PUBKEY,
+      relays: ['wss://r.example'],
+      gateway: gateway(walletEvent, []),
+      decrypt: async () => {
+        throw new Error('Extension hat abgelehnt');
+      },
+    });
+    expect(snapshot.walletStatus).toBe('unlesbar');
+    expect(snapshot.wallet).toBeUndefined();
+  });
+
+  it('meldet „gefunden" und liest weiter, auch ohne Privkey', async () => {
+    const ohnePrivkey = event('w2', 17375, JSON.stringify([['mint', MINT_A]]));
+    const snapshot = await readNip60Wallet({
+      pubkeyHex: PUBKEY,
+      relays: ['wss://r.example'],
+      gateway: gateway(ohnePrivkey, [tokenEvent('t1', MINT_A, 100)]),
+      decrypt,
+    });
+    expect(snapshot.walletStatus).toBe('gefunden');
+    expect(snapshot.balanceByMint[MINT_A]).toBe(100);
+  });
+});

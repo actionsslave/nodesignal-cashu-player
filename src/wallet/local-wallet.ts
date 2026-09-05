@@ -71,6 +71,14 @@ export interface ImportResult {
   mintUrl: string;
 }
 
+/** SFR-25: Ein angebotener, noch nicht endgültiger Export. */
+export interface ExportOffer {
+  bundle: ProofBundle;
+  amount: number;
+  mintUrl: string;
+  token: string;
+}
+
 /** SNR-09: Welche der beiden Quellen eine Wallet-Instanz verwaltet. */
 export type ProofSource = 'nip60' | 'local';
 
@@ -218,6 +226,50 @@ export class LocalWallet implements WalletService {
     return added;
   }
 
+  /**
+   * NUT-07: Beim Laden wegräumen, was der Mint schon als ausgegeben kennt.
+   *
+   * Ein Bestand, den die App nicht mehr ausgeben kann, darf nicht als Guthaben
+   * dastehen — jede Zahlung daraus scheiterte beim Mint, und der Nutzer erführe
+   * den Grund erst dann. Ist der Mint nicht erreichbar, bleibt alles liegen:
+   * „nicht erreichbar" heisst nicht „ausgegeben", und Löschen wäre die teurere
+   * Fehlannahme.
+   *
+   * Liefert die Summe der entfernten Proofs.
+   */
+  async pruneSpentProofs(): Promise<number> {
+    if (!this.gateway) return 0;
+    const db = await openDatabase();
+    const verfuegbar = (await db.getAllFromIndex('proofs', 'state', 'available')).filter(
+      (record) => this.mine(record),
+    );
+    if (verfuegbar.length === 0) return 0;
+
+    const byMint = new Map<string, ProofRecord[]>();
+    for (const record of verfuegbar) {
+      const key = normalizeMint(record.mintUrl);
+      byMint.set(key, [...(byMint.get(key) ?? []), record]);
+    }
+
+    let entfernt = 0;
+    for (const [mintUrl, records] of byMint) {
+      const secrets = await this.gateway
+        .spentSecrets(mintUrl, records.map((record) => record.proof))
+        .catch(() => [] as string[]);
+      if (secrets.length === 0) continue;
+
+      const weg = new Set(secrets);
+      const tx = db.transaction('proofs', 'readwrite');
+      for (const record of records) {
+        if (!weg.has(record.secret)) continue;
+        await tx.store.delete(record.secret);
+        entfernt += record.amount;
+      }
+      await tx.done;
+    }
+    return entfernt;
+  }
+
   async balance(): Promise<number> {
     const db = await openDatabase();
     const available = await db.getAllFromIndex('proofs', 'state', 'available');
@@ -325,6 +377,48 @@ export class LocalWallet implements WalletService {
         proofs: normalizeProofAmounts(records.map((record) => record.proof)),
       }),
     }));
+  }
+
+  /**
+   * SFR-25: Ein Export in drei Schritten.
+   *
+   * `exportTokens` allein war zu wenig: Es kodierte die Proofs und liess sie
+   * liegen. Wer den Token anderswo einloeste, sah hier weiter ein Guthaben,
+   * das es nicht mehr gab — und eine Zahlung daraus waere beim Mint als
+   * „bereits ausgegeben" gescheitert.
+   *
+   * Also erst reservieren, dann anzeigen, und erst wegnehmen, wenn der Nutzer
+   * den Token in der Hand hat. Wer den Dialog schliesst, ohne zu kopieren,
+   * behaelt sein Guthaben. Reserviert zaehlt nicht zum Guthaben und laesst
+   * sich nicht ausgeben — die Semantik aus FR-29 passt hier genau.
+   */
+  async beginExport(mintUrl?: string): Promise<ExportOffer | undefined> {
+    const verfuegbar = await this.balance();
+    if (verfuegbar === 0) return undefined;
+
+    const bundle = await this.reserve(verfuegbar, mintUrl).catch(() => undefined);
+    if (!bundle) return undefined;
+
+    return {
+      bundle,
+      amount: bundle.amount,
+      mintUrl: bundle.mintUrl,
+      token: getEncodedToken({
+        mint: bundle.mintUrl,
+        unit: WALLET_UNIT,
+        proofs: normalizeProofAmounts(bundle.proofs),
+      }),
+    };
+  }
+
+  /** Der Nutzer hat den Token — die Proofs sind hier nichts mehr wert. */
+  async completeExport(offer: ExportOffer): Promise<void> {
+    await this.commit(offer.bundle);
+  }
+
+  /** Abgebrochen: Das Guthaben bleibt, wo es war. */
+  async cancelExport(offer: ExportOffer): Promise<void> {
+    await this.release(offer.bundle);
   }
 
   /** Der Vertrag aus Kapitel 5.7 liefert einen String; bei mehreren Mints eine Zeile je Token. */
