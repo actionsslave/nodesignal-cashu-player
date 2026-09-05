@@ -54,6 +54,27 @@ function decode(value: string): string {
     .trim();
 }
 
+/**
+ * Die Audiodatei aus einem eingebetteten `<audio>`-Element.
+ *
+ * Nicht jeder Beitrag traegt ein `<enclosure>`: Die neuesten Nodesignal-Folgen
+ * kamen ueber den Audio-Shortcode von WordPress herein, der den Ton in den
+ * Beitragstext legt. Ohne diesen Rueckgriff fehlten im Player genau die
+ * aktuellen Folgen.
+ *
+ * Gesucht wird ausschliesslich innerhalb des `<audio>`-Blocks. Ein mp3-Link in
+ * den Shownotes ist eine Empfehlung, keine Folge — er darf hier nicht landen.
+ */
+export function embeddedAudioUrl(item: string): string | undefined {
+  const block = /<audio[^>]*>[\s\S]*?<\/audio>/i.exec(decode(item));
+  if (!block) return undefined;
+  const inhalt = block[0];
+  return (
+    /<source[^>]*\ssrc="([^"]+)"/i.exec(inhalt)?.[1] ??
+    /<audio[^>]*\ssrc="([^"]+)"/i.exec(inhalt)?.[1]
+  );
+}
+
 /** hh:mm:ss, mm:ss oder blanke Sekunden — so schreiben Feeds die Dauer. */
 export function parseDuration(value: string | undefined): number | undefined {
   if (!value) return undefined;
@@ -70,7 +91,8 @@ export function parseSnapshot(xml: string, fetchedAt: string): FeedSnapshot {
 
   const episodes: SnapshotEpisode[] = [];
   for (const item of items) {
-    const enclosureUrl = attr(item, 'enclosure', 'url');
+    // Das Enclosure ist die erklaerte Datei und geht vor.
+    const enclosureUrl = attr(item, 'enclosure', 'url') ?? embeddedAudioUrl(item);
     if (!enclosureUrl) continue;
     const published = tag(item, 'pubDate');
     episodes.push({

@@ -3,6 +3,27 @@
   "imageUrl": "https://nodesignal.space/wp-content/uploads/2021/12/20178404-1639497002094-bb43562b212bb.jpg",
   "episodes": [
     {
+      "guid": "https://nodesignal.space/E291/",
+      "title": "Nodesignal-Talk – E291 – Das Problem der Selbstverwahrung",
+      "description": "In der heutigen Folge sprechen Calso und Martin Betz mit Bastian Feder und Adrian Pauli über das Problem der Selbstverwahrung. Es geht darum, wie Menschen in und außerhalb der Bitcoin-Szene…",
+      "enclosureUrl": "https://serve.podhome.fm/episode/24263e26-0aa8-432a-467a-08dc1370a35c/639240639462923178869b25ba-7b5a-49aa-bda1-eb372c2e1ee8.mp3?_=1",
+      "publishedAt": 1788529558000
+    },
+    {
+      "guid": "https://nodesignal.space/2026/09/nodesignal-recap-august-2026/",
+      "title": "Nodesignal-Recap – August 2026",
+      "description": "August 2026 ist für mich gleich doppelt aufregend gestartet: Mit Folge 289 beginnt die fünfte Staffel, und in Folge 290 hat sich zeigen, wie viel sich in der Sommerpause an…",
+      "enclosureUrl": "https://serve.podhome.fm/episode/24263e26-0aa8-432a-467a-08dc1370a35c/63923845166255220838cdb6de-c408-43a4-a414-4ea30cb78b5f.mp3?_=2",
+      "publishedAt": 1788321600000
+    },
+    {
+      "guid": "https://nodesignal.space/E290/",
+      "title": "Nodesignal-Techboost – E290 – Juni / Juli (inkl. Deepdive Am I Exposed)",
+      "description": "In der heutigen Folge sprechen Thorsten ⚡️ und zettizettler über aktuelle Entwicklungen aus der Bitcoin- und Lightning-Welt: Sparrow Wallet 2.5 mit Silent-Payment-Integration, den kurzzeitig gesperrten Apple-Entwickler-Account von Craig Raw, die…",
+      "enclosureUrl": "https://serve.podhome.fm/episode/24263e26-0aa8-432a-467a-08dc1370a35c/639214782528028657e1f0b7e1-5fcd-41a8-a86d-b828dc3a96cf.mp3?_=3",
+      "publishedAt": 1787914671000
+    },
+    {
       "guid": "https://nodesignal.space/E289/",
       "title": "Nodesignal-Talk – E289 – Keine Angst",
       "description": "In der heutigen Folge sprechen actionslave, Chris⚡SHA256, Thorsten ⚡️ über die aktuelle Bewusstseinskrise in Bitcoin: Coldcard-Desaster, BTCPay-Server-Exploit, BIP-110, den eCash-Fork, Lightning-FUD, Preisdruck und die Haltefrist. Punkt für Punkt gehen wir…",
@@ -50,14 +71,7 @@
       "description": "In der heutigen Spezial-Folge sprechen Calso, Thorsten ⚡️ und zettizettler über die neuen Boosts der aktuellen Staffel bis zur Gegenwart. Wir gehen gemeinsam durch die eingegangenen Value4Value-Beiträge und lassen den…",
       "enclosureUrl": "https://serve.podhome.fm/episode/24263e26-0aa8-432a-467a-08dc1370a35c/639190537502627529062d2730-a53d-4faf-8205-58778acc661d.mp3",
       "publishedAt": 1783711200000
-    },
-    {
-      "guid": "https://nodesignal.space/E254/",
-      "title": "Reupload: Nodesignal-Techboost – E254 – Nerds unter sich: Highlights der btc++ lightning edition",
-      "description": "In der heutigen Folge (Re-Upload!) sprechen Jan-Paul und Calso mit Chistian Decker, Rene Pickhardt und Calle auf der btc++ Lightning Konferenz in Berlin über die aktuellen Themen, die die drei…",
-      "enclosureUrl": "https://serve.podhome.fm/episode/24263e26-0aa8-432a-467a-08dc1370a35c/639185803274134682c5fe570d-c088-4231-b9e9-3933b57ffe3av1.mp3",
-      "publishedAt": 1783108800000
     }
   ],
-  "fetchedAt": "2026-09-04T18:46:24.598Z"
+  "fetchedAt": "2026-09-05T08:01:26.756Z"
 }
