@@ -227,3 +227,42 @@ describe('FR-30: Anzahl der Nutzaps dieser Sitzung', () => {
     expect(controller.state).toMatchObject({ sentSats: 0, sentZaps: 0 });
   });
 });
+
+describe('Nebenläufigkeit (Audit-Fund)', () => {
+  /*
+   * flush() rechnet den zahlbaren Betrag aus, bevor es auf Guthaben und
+   * Zahlung wartet, und zieht sentSats erst danach hoch. Laeuft in der
+   * Zwischenzeit ein zweites Intervall ab, rechnet es dieselbe gehoerte Zeit
+   * noch einmal mit. Aus 20 Sat verdienter Zeit wuerden 30 Sat abgebucht.
+   */
+  it('bucht nie mehr ab, als an gehörter Zeit aufgelaufen ist', async () => {
+    let aufloesen: (() => void) | undefined;
+    const ersteZahlung = new Promise<void>((resolve) => {
+      aufloesen = resolve;
+    });
+    const gesendet: number[] = [];
+
+    const controller = new StreamingController({
+      rate: 60, // 1 Sat je Sekunde — die Rechnung bleibt übersichtlich
+      intervalSeconds: 10,
+      send: async (amount) => {
+        gesendet.push(amount);
+        if (gesendet.length === 1) await ersteZahlung;
+        return 'gesendet';
+      },
+      balance: async () => 100_000,
+    });
+
+    // Erstes Intervall: 10 Sat, die Zahlung bleibt hängen.
+    const erster = controller.handleTick(tick(10));
+    // Zweites Intervall, während die erste Zahlung noch offen ist.
+    const zweiter = controller.handleTick(tick(10));
+
+    aufloesen?.();
+    await Promise.all([erster, zweiter]);
+
+    const summe = gesendet.reduce((a, b) => a + b, 0);
+    expect(summe).toBeLessThanOrEqual(20);
+    expect(controller.state.sentSats).toBeLessThanOrEqual(20);
+  });
+})

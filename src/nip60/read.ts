@@ -91,13 +91,23 @@ export async function readNip60Wallet(deps: ReadNip60Deps): Promise<Nip60Snapsho
     tokenEvents.push({ id: event.id, content });
   }
 
-  await rememberTokenEvents(tokenEvents);
+  /*
+   * NIP-60 ersetzt Token-Events, es bearbeitet sie nicht: Das neue Event nennt
+   * im `del` die IDs, die es abloest. Ein abgeloestes Event bleibt trotzdem auf
+   * den Relays liegen — ein Deletion-Event ist nur eine Bitte, keine Garantie.
+   * Zaehlte es mit, saehe der Nutzer mehr, als er hat, und eine Entnahme griffe
+   * nach Proofs, die der Mint laengst als ausgegeben kennt.
+   */
+  const abgeloest = new Set(tokenEvents.flatMap((entry) => entry.content.del));
+  const aktuelle = tokenEvents.filter((entry) => !abgeloest.has(entry.id));
+
+  await rememberTokenEvents(aktuelle);
 
   return {
     walletStatus: 'gefunden',
     wallet,
-    tokenEvents,
-    balanceByMint: balanceByMint(tokenEvents.map((entry) => entry.content)),
+    tokenEvents: aktuelle,
+    balanceByMint: balanceByMint(aktuelle.map((entry) => entry.content)),
     unreadableEvents,
   };
 }

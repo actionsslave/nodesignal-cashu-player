@@ -124,7 +124,18 @@ export interface NutzapConfigRecord {
 export interface PendingNutzapRecord {
   id: string;
   /** Das fertig signierte kind:9321; ein erneuter Versuch braucht keine neue Signatur. */
-  event: { kind: number; created_at: number; tags: string[][]; content: string; id: string; pubkey: string; sig: string };
+  event?: { kind: number; created_at: number; tags: string[][]; content: string; id: string; pubkey: string; sig: string };
+  /**
+   * Das noch unsignierte kind:9321, wenn die Extension die Signatur abgelehnt
+   * hat. Der Swap ist dann schon passiert: Die Proofs sind auf den Empfaenger
+   * gelockt, aber niemand weiss davon. Ohne diesen Eintrag waere das Geld weg.
+   */
+  unsigned?: { kind: number; created_at: number; tags: string[][]; content: string };
+  /**
+   * Die gelockten Proofs zu `unsigned`. Sie stehen nur hier — die lokale
+   * Wallet hat sie beim Swap abgegeben.
+   */
+  lockedProofs?: StoredProof[];
   relays: string[];
   /** Verweis auf den Verlaufseintrag, damit der Status nachgezogen werden kann. */
   historyId: string;

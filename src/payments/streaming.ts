@@ -49,6 +49,16 @@ export class StreamingController {
   private sentZaps = 0;
   private stopped = false;
   private reason: string | undefined;
+  /**
+   * Ein flush() darf nicht in einen laufenden hineinlaufen.
+   *
+   * Der zahlbare Betrag wird vor dem Warten auf Guthaben und Zahlung
+   * berechnet, sentSats erst danach hochgezogen. Laeuft in der Zwischenzeit
+   * das naechste Intervall ab, rechnet es dieselbe gehoerte Zeit noch einmal
+   * mit — aus 20 Sat verdienter Zeit wuerden 30 Sat abgebucht. Ein Mint, der
+   * laenger als ein Intervall braucht, genuegt dafuer.
+   */
+  private inFlight: Promise<void> | undefined;
 
   constructor(options: StreamingControllerOptions) {
     this.options = options;
@@ -90,8 +100,19 @@ export class StreamingController {
     await this.flush();
   }
 
+  /** Reiht den Aufruf hinter einen laufenden ein, statt ihn zu ueberholen. */
+  private serialize(arbeit: () => Promise<void>): Promise<void> {
+    const naechster = (this.inFlight ?? Promise.resolve()).then(arbeit, arbeit);
+    this.inFlight = naechster;
+    return naechster;
+  }
+
   /** Sendet den aufgelaufenen Betrag, sofern er mindestens 1 Sat ergibt. */
-  async flush(): Promise<void> {
+  flush(): Promise<void> {
+    return this.serialize(() => this.flushOnce());
+  }
+
+  private async flushOnce(): Promise<void> {
     this.secondsSinceFlush = 0;
 
     const payable = Math.floor(this.pendingSats + 1e-9);

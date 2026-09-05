@@ -189,7 +189,7 @@ describe('FR-29: Abbruch nach dem Mint-Swap', () => {
     const db = await openDatabase();
     const pending = await db.getAll('pendingNutzaps');
     expect(pending).toHaveLength(1);
-    expect(pending[0].event.kind).toBe(9321);
+    expect(pending[0].event?.kind).toBe(9321);
     expect(pending[0].relays).toEqual(['wss://r1.example']);
   });
 

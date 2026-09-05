@@ -41,21 +41,44 @@ Wallet-Events. Er ist nicht verloren, aber vorübergehend nur lokal sichtbar.
 | Quellenwahl und Gründe je Quelle (SFR-28 bis SFR-30) | gebaut |
 | Laufzeit-Abruf mit Rückfall auf den Build-Stand (SFR-09) | gebaut |
 | Lokale Wallet, Nutzaps, Player-Kern | aus `cashu-player` übernommen |
-| Oberfläche (SFR-05 bis SFR-07, SFR-20, SFR-28 bis SFR-30) | gebaut, **schmucklos — wartet auf das Design-Handoff** |
+| Oberfläche nach dem Handoff, Entwurf 5a und 5b | gebaut |
+| Float ausführen: Swap, Verschlüsselung, Publikation (SFR-16, SFR-17) | gebaut |
+| Verlauf, Einstellungen, Erklärung (SFR-21, SFR-32, SOQ-08) | gebaut |
 | Deployment auf `player.nodesignal.space` (SFR-02) | **offen — Origin einrichten** |
 
-## Noch nicht verdrahtet
+## Offene Risiken
 
-Die Oberfläche steht, aber zwei Stränge hängen noch nicht daran:
+Die Oberfläche steht (Entwurf 5a und 5b), Lesen und Entschlüsseln der
+NIP-60-Wallet laufen, Float-Entnahme und -Rückgabe sind verdrahtet, Feed und
+Empfänger sind echte Werte — kein Platzhalter mehr. **Damit bewegt diese App
+echtes Geld.**
 
-- **`kind:17375` und `kind:7375` lesen.** `src/nip60/wallet-event.ts` wertet
-  beide aus und ist getestet; das Holen von den Relays und das Entschlüsseln
-  über die Extension fehlen. Bis dahin meldet die NIP-60-Quelle
-  „keine Wallet gefunden" — richtig im Ergebnis, aber aus dem falschen Grund.
-- **Float-Entnahme und -Rückgabe.** `src/nip60/float.ts` plant beide und ist
-  getestet; das Ausführen verlangt einen Mint-Swap, ein `kind:5` und ein neues
-  `kind:7375`. Das ist der Schritt, der echtes Geld bewegt, und er gehört gegen
-  einen echten Mint geprüft, nicht blind geschrieben.
+Ein externer Audit vom 05.09.2026 hat mehrere Befunde ergeben. Behoben sind:
+
+- Eine abgelehnte Signatur nach dem Mint-Swap verlor die gelockten Proofs.
+  Sie werden jetzt samt unsigniertem Event gesichert und nachgeholt.
+- Überlappende Streaming-Abbuchungen konnten dieselbe gehörte Zeit doppelt
+  berechnen. Die Abbuchungen sind serialisiert.
+- Das NIP-60-Streaming konnte nie anlaufen: Die Untergrenze griff, bevor der
+  Float entnommen werden konnte.
+- Abgelöste `kind:7375` (NIP-60 `del`) wurden mitgezählt und blähten das
+  Guthaben auf.
+- Der Zahlweg war nur über die Anzeige gesperrt, nicht vor der Geldbewegung.
+- Der Verlauf nannte bei Zahlungen die Quelle nicht.
+
+**Offen, und deshalb kein Produktivbetrieb:**
+
+- Ein Netzfehler beim Swap ist von einem Fehler danach nicht unterscheidbar.
+  Die Proofs werden freigegeben — die wahrscheinlich richtige Annahme, aber
+  nicht die sichere. Es fehlt ein dauerhaftes Vorgangsjournal.
+- Der Float ist an keine Identität gebunden. Nach einem Kontowechsel könnte
+  ein liegengebliebener Float der falschen Wallet zugeschrieben werden.
+- Float-Entnahme und -Rückgabe sind nicht gegen Nebenläufigkeit gesichert
+  (zwei Tabs, gleichzeitige Rückgabe und Zahlung).
+- Entschlüsselte Wallet-Inhalte werden nicht schemageprüft.
+- Relay-Adressen werden nicht zentral validiert.
+- Der Laufzeit-Feedabruf hat kein Zeitlimit und prüft die Antwort nicht auf
+  Plausibilität.
 
 ## Vor dem ersten Deployment
 

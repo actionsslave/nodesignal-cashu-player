@@ -422,8 +422,25 @@ function App() {
 
   const walletFuerQuelle = activeSource === 'nip60' ? floatWallet : localWallet;
 
+  /**
+   * SFR-12, SNR-05: Die Erlaubnis wird unmittelbar vor jeder Geldbewegung
+   * geprüft, nicht nur beim Zeichnen der Oberfläche.
+   *
+   * Die Quellenwahl überlebt den Reload (SFR-28). Ohne diese Prüfung könnte
+   * eine gespeicherte Wahl den Weg zum Mint öffnen, während niemand angemeldet
+   * ist oder die Seite in einem fremden Rahmen läuft — die Anzeige sagte
+   * „gesperrt", der Swap liefe trotzdem. Und der Swap kommt vor der Signatur:
+   * Bis die Extension fragt, ist das Geld schon gelockt.
+   */
+  const darfZahlen = useCallback((): boolean => {
+    if (embedded || !session || !activeSource) return false;
+    const quelle = activeSource === 'nip60' ? sources.nip60 : sources.local;
+    return quelle.available;
+  }, [embedded, session, activeSource, sources]);
+
   const zahle = useCallback(
     async (amount: number, kind: 'streaming' | 'boost', content?: string) => {
+      if (!darfZahlen()) return 'fehlgeschlagen';
       if (!target || target.status !== 'resolved' || !nowPlaying) return 'fehlgeschlagen';
       const ergebnis = await sendNutzap(
         {
@@ -431,6 +448,8 @@ function App() {
           amount,
           kind,
           content,
+          // SFR-32: Der Verlauf soll die Quelle nennen, nicht raten lassen.
+          source: activeSource,
           feedTitle: feed?.title,
           episodeTitle: nowPlaying.title,
           context: {
@@ -451,7 +470,18 @@ function App() {
       await refreshWallet();
       return ergebnis.status;
     },
-    [target, nowPlaying, feed, position, walletFuerQuelle, mintGateway, nostr, refreshWallet],
+    [
+      target,
+      nowPlaying,
+      feed,
+      position,
+      activeSource,
+      darfZahlen,
+      walletFuerQuelle,
+      mintGateway,
+      nostr,
+      refreshWallet,
+    ],
   );
 
   // SFR-23: Abrechnung je 60 Sekunden gehörter Zeit. Der Controller bleibt
@@ -465,8 +495,20 @@ function App() {
       const status = await zahle(amount, 'streaming');
       return status === 'gesendet' ? 'gesendet' : 'ausstehend';
     },
+    /*
+     * Was diese Quelle finanzieren kann — nicht, was gerade lokal liegt.
+     *
+     * Der Controller haelt unterhalb der Untergrenze an, bevor er send()
+     * aufruft. Meldete NIP-60 hier den offenen Float, waere der zu
+     * Sitzungsbeginn null: Das Streaming stuende still, ehe ensureFloat()
+     * ueberhaupt zur Entnahme kaeme, obwohl die Wallet voll ist.
+     */
     balance: async () =>
-      activeSource === 'nip60' ? floatRemaining : localWallet.balance(),
+      activeSource === 'nip60'
+        ? floatRemaining > 0
+          ? floatRemaining
+          : sources.nip60.balance
+        : localWallet.balance(),
     onStopped: (stopped) => setStreamingNote(stopped ? untergrenzeText() : undefined),
   });
 

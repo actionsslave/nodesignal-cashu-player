@@ -208,3 +208,46 @@ describe('SFR-29: der Grund muss stimmen', () => {
     expect(snapshot.balanceByMint[MINT_A]).toBe(100);
   });
 });
+
+describe('NIP-60 del: ersetzte Events zaehlen nicht mit', () => {
+  /*
+   * NIP-60 ersetzt Token-Events, es bearbeitet sie nicht: Das neue Event nennt
+   * im `del` die IDs, die es abloest. Bleibt ein abgeloestes Event auf einem
+   * Relay liegen — und das tut es, ein Deletion-Event ist nur eine Bitte —,
+   * zaehlte sein Guthaben ein zweites Mal mit. Der Nutzer saehe mehr, als er
+   * hat, und eine Entnahme griffe nach Proofs, die der Mint laengst kennt.
+   */
+  it('laesst ein Event weg, das ein anderes ersetzt hat', async () => {
+    const alt = tokenEvent('alt', MINT_A, 100);
+    const neu = event(
+      'neu',
+      7375,
+      JSON.stringify({
+        mint: MINT_A,
+        unit: 'sat',
+        proofs: [{ id: '00ad268c4d1f5826', amount: 40, secret: 'neu-0', C: '02aa' }],
+        del: ['alt'],
+      }),
+    );
+
+    const snapshot = await readNip60Wallet({
+      pubkeyHex: PUBKEY,
+      relays: ['wss://r.example'],
+      gateway: gateway(walletEvent, [alt, neu]),
+      decrypt,
+    });
+
+    expect(snapshot.balanceByMint[MINT_A]).toBe(40);
+    expect(snapshot.tokenEvents.map((e) => e.id)).toEqual(['neu']);
+  });
+
+  it('zaehlt beide, solange keines das andere ersetzt', async () => {
+    const snapshot = await readNip60Wallet({
+      pubkeyHex: PUBKEY,
+      relays: ['wss://r.example'],
+      gateway: gateway(walletEvent, [tokenEvent('a', MINT_A, 60), tokenEvent('b', MINT_A, 40)]),
+      decrypt,
+    });
+    expect(snapshot.balanceByMint[MINT_A]).toBe(100);
+  });
+});

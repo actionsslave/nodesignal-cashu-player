@@ -23,6 +23,8 @@ export interface SendNutzapInput {
   target: ResolvedPaymentTarget;
   amount: number;
   kind: 'streaming' | 'boost';
+  /** SFR-32: Aus welcher Quelle die Zahlung finanziert wird. */
+  source?: 'nip60' | 'local';
   content?: string;
   feedTitle?: string;
   episodeTitle?: string;
@@ -45,13 +47,13 @@ export interface SendNutzapResult {
 }
 
 async function queue(
-  event: SignedNostrEvent,
+  offen: Pick<PendingNutzapRecord, 'event' | 'unsigned' | 'lockedProofs'>,
   relays: string[],
   historyId: string,
 ): Promise<void> {
   const record: PendingNutzapRecord = {
     id: crypto.randomUUID(),
-    event,
+    ...offen,
     relays,
     historyId,
     createdAt: Date.now(),
@@ -72,6 +74,7 @@ export async function sendNutzap(
     amount: input.amount,
     kind: input.kind,
     status: 'ausstehend',
+    source: input.source,
     feedTitle: input.feedTitle,
     episodeTitle: input.episodeTitle,
   });
@@ -143,8 +146,11 @@ export async function sendNutzap(
   try {
     signed = await sign(unsigned);
   } catch {
-    // Ohne Signatur lässt sich nichts publizieren, aber die Proofs sind weg.
-    // Der Eintrag bleibt ausstehend; ein neuer Versuch braucht eine Signatur.
+    // Der Swap ist gelaufen: Die Proofs sind auf den Empfaenger gelockt und aus
+    // der lokalen Wallet verschwunden. Wuerde hier nur der Status gesetzt, waere
+    // das Geld weg — der Empfaenger erfaehrt ohne kind:9321 nie davon, und
+    // niemand haette die Proofs mehr, um es nachzuholen. Also beides sichern.
+    await queue({ unsigned, lockedProofs: locked.send }, relays, historyId);
     await updatePaymentStatus(historyId, 'ausstehend', 'Signatur fehlgeschlagen.');
     return { status: 'ausstehend', amount: input.amount, historyId, acceptedBy: [] };
   }
@@ -159,7 +165,7 @@ export async function sendNutzap(
       acceptedBy: published.acceptedBy,
     };
   } catch (error) {
-    await queue(signed, relays, historyId);
+    await queue({ event: signed }, relays, historyId);
     await updatePaymentStatus(
       historyId,
       'ausstehend',
@@ -170,14 +176,30 @@ export async function sendNutzap(
 }
 
 /** FR-29: erneut publizieren, was beim ersten Versuch kein Relay bestätigt hat. */
-export async function retryPendingNutzaps(deps: Pick<SendNutzapDeps, 'nostr'>): Promise<number> {
+/**
+ * FR-29: Nachholen, was beim ersten Versuch liegen blieb.
+ *
+ * Zwei Faelle. Ein signiertes Event braucht nur einen neuen Publikationsversuch.
+ * Ein unsigniertes braucht zuerst die Signatur — dahinter stehen Proofs, die
+ * beim Mint schon auf den Empfaenger gelockt sind. Erst wenn beides durch ist,
+ * verschwindet der Eintrag.
+ */
+export async function retryPendingNutzaps(
+  deps: Pick<SendNutzapDeps, 'nostr'> & { signEvent?: SendNutzapDeps['signEvent'] },
+): Promise<number> {
+  const sign = deps.signEvent ?? signViaExtension;
   const db = await openDatabase();
   const pending = await db.getAll('pendingNutzaps');
   let sent = 0;
 
   for (const record of pending) {
     try {
-      await deps.nostr.publish(record.relays, record.event as SignedNostrEvent);
+      let event = record.event as SignedNostrEvent | undefined;
+      if (!event) {
+        if (!record.unsigned) throw new Error('Weder signiertes noch unsigniertes Event.');
+        event = await sign(record.unsigned);
+      }
+      await deps.nostr.publish(record.relays, event);
       await db.delete('pendingNutzaps', record.id);
       await updatePaymentStatus(record.historyId, 'gesendet');
       sent += 1;
