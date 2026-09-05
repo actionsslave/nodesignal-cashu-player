@@ -53,6 +53,15 @@ export interface MastheadProps {
   sourceLabel: string;
   /** SFR-12: Ohne Anmeldung nennt die Zeile den Zustand, nicht den Feed-Stand. */
   loggedIn: boolean;
+  /** FR-06. */
+  onLogout: () => void;
+  /**
+   * SFR-13: Die Wallet noch einmal von den Relays holen. Ohne das müsste sich
+   * abmelden und neu anmelden, wer sie gerade erst in einem anderen Client
+   * eingerichtet hat. Fehlt, wenn die Extension kein nip44 kann.
+   */
+  onReloadWallet?: () => void;
+  walletBusy?: boolean;
 }
 
 export function Masthead({
@@ -62,6 +71,9 @@ export function Masthead({
   feedStale,
   sourceLabel,
   loggedIn,
+  onLogout,
+  onReloadWallet,
+  walletBusy,
 }: MastheadProps) {
   const [active, setActive] = useState(INDEX_LINKS[0].id);
 
@@ -99,7 +111,22 @@ export function Masthead({
           ))}
         </nav>
         {npubShort ? (
-          <span class="npub">{npubShort}</span>
+          <span class="identity">
+            <span class="npub">{npubShort}</span>
+            {onReloadWallet && (
+              <button
+                type="button"
+                class="btn btn-ghost"
+                disabled={walletBusy}
+                onClick={onReloadWallet}
+              >
+                {walletBusy ? 'Lädt…' : 'Wallet neu laden'}
+              </button>
+            )}
+            <button type="button" class="btn btn-ghost" onClick={onLogout}>
+              Abmelden
+            </button>
+          </span>
         ) : (
           <button type="button" class="btn btn-primary" onClick={onLogin}>
             Mit nostr anmelden

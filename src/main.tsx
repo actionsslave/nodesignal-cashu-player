@@ -36,12 +36,12 @@ import {
 import { SettingsView } from './ui/settings-view.js';
 import { detectSigner, nip44Decrypt, nip44Encrypt, signEvent } from './identity/nip07.js';
 import { isEmbedded } from './identity/embedding.js';
-import { login, restoreSession, shortNpub, type Session } from './identity/session.js';
+import { login, logout, restoreSession, shortNpub, type Session } from './identity/session.js';
 import { evaluateSources, type SourceId } from './payments/source.js';
 import { resolvePaymentTarget } from './payments/resolve-target.js';
 import { SimplePoolGateway } from './payments/simple-pool-gateway.js';
 import { sendNutzap } from './payments/pay.js';
-import { StreamingController } from './payments/streaming.js';
+import { useStreamingController } from './ui/use-streaming.js';
 import {
   confirmStreamingRate,
   getStreamingRate,
@@ -74,7 +74,7 @@ import {
   type FloatStateRecord,
   type HistoryRecord,
 } from './db/database.js';
-import type { PaymentTarget, ListeningTick } from './contracts/index.js';
+import type { PaymentTarget } from './contracts/index.js';
 import './ui/app.css';
 
 const snapshot = snapshotJson as FeedSnapshot;
@@ -128,6 +128,7 @@ function App() {
    * die Rueckgabe an Relays, die sein eigener Client nicht liest.
    */
   const [walletRelays, setWalletRelays] = useState<string[] | undefined>(undefined);
+  const [walletBusy, setWalletBusy] = useState(false);
 
   /** SFR-20, SFR-31: quellenübergreifend, überlebt einen Quellenwechsel. */
   const [sessionSent, setSessionSent] = useState(0);
@@ -242,24 +243,35 @@ function App() {
     };
   }, [session, nostr]);
 
-  // SFR-13, SNR-01: die NIP-60-Wallet wird gelesen, nie angelegt.
-  useEffect(() => {
+  /**
+   * SFR-13, SNR-01: Die NIP-60-Wallet wird gelesen, nie angelegt.
+   *
+   * Als Funktion, nicht nur als Effekt: Wer die Wallet gerade erst in einem
+   * anderen Client eingerichtet hat, soll sie hier sehen, ohne sich neu
+   * anmelden zu müssen.
+   */
+  const readWallet = useCallback(async () => {
     if (!session || !signer.nip44 || !walletRelays) return;
-    let cancelled = false;
-    void readNip60Wallet({
-      pubkeyHex: session.pubkeyHex,
-      relays: walletRelays,
-      gateway: nostr,
-      decrypt: nip44Decrypt,
-    })
-      .then((gelesen) => {
-        if (!cancelled) setNip60(gelesen);
-      })
-      .catch(() => undefined);
-    return () => {
-      cancelled = true;
-    };
+    setWalletBusy(true);
+    try {
+      setNip60(
+        await readNip60Wallet({
+          pubkeyHex: session.pubkeyHex,
+          relays: walletRelays,
+          gateway: nostr,
+          decrypt: nip44Decrypt,
+        }),
+      );
+    } catch {
+      // Nicht erreichbar heisst nicht „keine Wallet" — der letzte Stand bleibt.
+    } finally {
+      setWalletBusy(false);
+    }
   }, [session, signer.nip44, walletRelays, nostr]);
+
+  useEffect(() => {
+    void readWallet();
+  }, [readWallet]);
 
   const sources = useMemo(
     () =>
@@ -436,31 +448,22 @@ function App() {
     [target, nowPlaying, feed, position, walletFuerQuelle, mintGateway, nostr, refreshWallet],
   );
 
-  // SFR-23: Abrechnung je 60 Sekunden gehörter Zeit.
-  const streaming = useRef<StreamingController | undefined>(undefined);
-  useEffect(() => {
-    if (rate <= 0 || !rateConfirmed || !activeSource) {
-      streaming.current = undefined;
-      return;
-    }
-    streaming.current = new StreamingController({
-      rate,
-      send: async (amount) => {
-        if (!(await ensureFloat('streaming'))) return 'ausstehend';
-        const status = await zahle(amount, 'streaming');
-        return status === 'gesendet' ? 'gesendet' : 'ausstehend';
-      },
-      balance: async () => (activeSource === 'nip60' ? floatRemaining : localWallet.balance()),
-      onUpdate: (state) => {
-        // SFR-27: Unter der Untergrenze hält das Streaming an und sagt es.
-        setStreamingNote(state.stopped ? untergrenzeText() : undefined);
-      },
-    });
-  }, [rate, rateConfirmed, activeSource, floatRemaining, ensureFloat, zahle, localWallet]);
+  // SFR-23: Abrechnung je 60 Sekunden gehörter Zeit. Der Controller bleibt
+  // stehen; nur seine Callbacks sind bei jedem Render frisch.
+  const streaming = useStreamingController({
+    rate,
+    confirmed: rateConfirmed,
+    source: activeSource,
+    send: async (amount) => {
+      if (!(await ensureFloat('streaming'))) return 'ausstehend';
+      const status = await zahle(amount, 'streaming');
+      return status === 'gesendet' ? 'gesendet' : 'ausstehend';
+    },
+    balance: async () =>
+      activeSource === 'nip60' ? floatRemaining : localWallet.balance(),
+    onStopped: (stopped) => setStreamingNote(stopped ? untergrenzeText() : undefined),
+  });
 
-  const onTick = useCallback((tick: ListeningTick) => {
-    void streaming.current?.handleTick(tick);
-  }, []);
 
   async function handleImport() {
     setImportError(undefined);
@@ -468,7 +471,7 @@ function App() {
       await localWallet.importToken(token.trim());
       setToken('');
       await refreshWallet();
-      streaming.current?.resume();
+      streaming.resume();
     } catch (cause) {
       setImportError(
         cause instanceof TokenImportError ? cause.message : 'Der Import ist fehlgeschlagen.',
@@ -511,6 +514,20 @@ function App() {
     void writeActiveSource(ziel);
   }
 
+  /**
+   * FR-06: Abmelden loescht Pubkey und Session. Die Proofs bleiben liegen —
+   * sie gehoeren dem Geraet, nicht der Anmeldung, und ein Abmelden darf kein
+   * Guthaben vernichten. Ein offener Float geht vorher zurueck (SFR-17).
+   */
+  async function handleLogout() {
+    if (floatRemaining > 0) await giveBackFloat();
+    await logout();
+    setSession(undefined);
+    setNip60(undefined);
+    setActiveSource(undefined);
+    setForeignEvents(undefined);
+  }
+
   const quelleAktiv = activeSource ? QUELLEN_NAME[activeSource] : 'keine gewählt';
   const beideGesperrt = !sources.nip60.available && !sources.local.available;
   const canBoost =
@@ -525,6 +542,9 @@ function App() {
         feedStale={feed?.stale}
         sourceLabel={quelleAktiv}
         loggedIn={Boolean(session)}
+        onLogout={() => void handleLogout()}
+        onReloadWallet={signer.nip44 ? () => void readWallet() : undefined}
+        walletBusy={walletBusy}
       />
 
       {hasPlaceholders() && (
@@ -542,7 +562,7 @@ function App() {
         episode={nowPlaying}
         podcastTitle={feed?.title}
         artworkUrl={nowPlaying ? feed?.imageUrl : undefined}
-        onTick={onTick}
+        onTick={streaming.onTick}
         onPositionChange={setPosition}
         sessionSent={sessionSent}
         floatRemaining={activeSource === 'nip60' ? floatRemaining : undefined}
