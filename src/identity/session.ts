@@ -37,6 +37,39 @@ export async function restoreSession(): Promise<Session | undefined> {
   return record ? toSession(record) : undefined;
 }
 
+export interface VerifyOptions {
+  /** Nur für Tests; im Betrieb der Pubkey aus der Extension. */
+  currentPubkey?: () => Promise<string>;
+}
+
+/**
+ * Die wiederhergestellte Session gegen die Extension prüfen.
+ *
+ * `restoreSession` glaubt dem gespeicherten Pubkey — und der stimmt nicht mehr,
+ * sobald der Nutzer in seiner Extension das Konto wechselt. Dann stünde hier
+ * der alte npub mit der alten Wallet, während das neue Konto signiert: zwei
+ * Identitäten in einer Sitzung, und Geld dazwischen.
+ *
+ * Antwortet die Extension nicht, bleibt die Session. Keine Antwort heisst
+ * nicht „anderes Konto"; wer offline ist oder die Freigabe noch nicht erteilt
+ * hat, soll nicht abgemeldet werden.
+ */
+export async function verifySession(options: VerifyOptions = {}): Promise<Session | undefined> {
+  const session = await restoreSession();
+  if (!session) return undefined;
+
+  let aktuell: string;
+  try {
+    aktuell = await (options.currentPubkey ?? getPublicKey)();
+  } catch {
+    return session;
+  }
+
+  if (aktuell === session.pubkeyHex) return session;
+  await logout();
+  return undefined;
+}
+
 /** FR-06: Pubkey und Session löschen. Proofs bleiben liegen. */
 export async function logout(): Promise<void> {
   const db = await openDatabase();

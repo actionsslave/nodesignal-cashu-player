@@ -71,8 +71,6 @@ Ein externer Audit vom 05.09.2026 hat mehrere Befunde ergeben. Behoben sind:
 - Ein Netzfehler beim Swap ist von einem Fehler danach nicht unterscheidbar.
   Die Proofs werden freigegeben — die wahrscheinlich richtige Annahme, aber
   nicht die sichere. Es fehlt ein dauerhaftes Vorgangsjournal.
-- Der Float ist an keine Identität gebunden. Nach einem Kontowechsel könnte
-  ein liegengebliebener Float der falschen Wallet zugeschrieben werden.
 - Float-Entnahme und -Rückgabe sind nicht gegen Nebenläufigkeit gesichert
   (zwei Tabs, gleichzeitige Rückgabe und Zahlung).
 - Entschlüsselte Wallet-Inhalte werden nicht schemageprüft.

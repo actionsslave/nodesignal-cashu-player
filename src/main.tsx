@@ -36,7 +36,7 @@ import {
 import { SettingsView } from './ui/settings-view.js';
 import { detectSigner, nip44Decrypt, nip44Encrypt, signEvent } from './identity/nip07.js';
 import { isEmbedded } from './identity/embedding.js';
-import { login, logout, restoreSession, shortNpub, type Session } from './identity/session.js';
+import { login, logout, shortNpub, verifySession, type Session } from './identity/session.js';
 import { evaluateSources, type SourceId } from './payments/source.js';
 import { resolvePaymentTarget } from './payments/resolve-target.js';
 import { SimplePoolGateway } from './payments/simple-pool-gateway.js';
@@ -183,7 +183,9 @@ function App() {
   );
 
   useEffect(() => {
-    void restoreSession().then(setSession);
+    // Nicht restoreSession: Der gespeicherte Pubkey stimmt nicht mehr, sobald
+    // der Nutzer in seiner Extension das Konto gewechselt hat.
+    void verifySession().then(setSession);
     // NUT-07 zuerst: Was der Mint als ausgegeben kennt, darf gar nicht erst
     // als Guthaben erscheinen.
     void localWallet
@@ -635,8 +637,14 @@ function App() {
         canBoost={canBoost}
       />
 
-      {/* SOQ-03: nur, wenn tatsaechlich noch etwas liegt. */}
-      {leftover && floatRemaining > 0 && (
+      {/*
+        SOQ-03: nur, wenn tatsaechlich noch etwas liegt — und nur dem, dem es
+        gehoert. Ein Float aus einer anderen Anmeldung ginge sonst an die
+        falsche Wallet zurueck.
+      */}
+      {leftover &&
+        floatRemaining > 0 &&
+        (leftover.ownerPubkey === undefined || leftover.ownerPubkey === session?.pubkeyHex) && (
         <LeftoverFloat
           amount={floatRemaining}
           mintUrl={leftover.mintUrl}

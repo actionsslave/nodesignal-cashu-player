@@ -120,6 +120,7 @@ export class FloatService {
       mintUrl,
       consumedEventIds: plan.consumedEventIds,
       ownEventIds,
+      ownerPubkey: this.deps.pubkeyHex,
       openedAt: Date.now(),
     });
 
@@ -146,6 +147,13 @@ export class FloatService {
     const db = await openDatabase();
     const state = await db.get('floatState', 'current');
     if (!state) return undefined;
+
+    // Ein fremder Float bleibt liegen, damit der richtige Nutzer ihn bekommt.
+    if (state.ownerPubkey !== undefined && state.ownerPubkey !== this.deps.pubkeyHex) {
+      throw new Error(
+        'Dieser Float gehört einem anderen npub. Melde dich mit ihm an, um ihn zurückzuschreiben.',
+      );
+    }
 
     const rest = await this.wallet.balance();
     if (rest === 0) {

@@ -177,6 +177,13 @@ export interface FloatStateRecord {
    * einer Fassung davor sie nicht traegt.
    */
   ownEventIds?: string[];
+  /**
+   * Wem dieser Float gehoert. Ohne ihn schriebe ein Kontowechsel ihn der
+   * falschen Wallet gut: Die Proofs liegen lokal, und der Dienst des neuen
+   * Kontos faende sie und publizierte sie unter dessen npub. Optional, weil
+   * ein Datensatz aus einer Fassung davor ihn nicht traegt.
+   */
+  ownerPubkey?: string;
   openedAt: number;
 }
 

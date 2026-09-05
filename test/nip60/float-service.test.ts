@@ -167,3 +167,44 @@ describe('FloatService', () => {
     await expect(new LocalWallet({ source: 'nip60' }).balance()).resolves.toBe(500);
   });
 });
+
+describe('Der Float gehoert einer Identitaet', () => {
+  beforeEach(async () => {
+    await resetDatabase();
+  });
+
+  const ANDERER = 'b'.repeat(64);
+
+  it('haelt fest, wem der Float gehoert', async () => {
+    const { service } = makeService();
+    await service.take({ amount: 500, mintUrl: MINT, events: [tokenEvent('ev-1', [1000])] });
+
+    const db = await openDatabase();
+    const state = await db.get('floatState', 'current');
+    expect(state?.ownerPubkey).toBe(PUBKEY);
+  });
+
+  /*
+   * Ohne diese Sperre schriebe ein Kontowechsel den Float der falschen Wallet
+   * gut: Die Proofs liegen lokal, der Dienst des neuen Kontos faende sie und
+   * publizierte sie unter dessen npub. Das Geld waere beim falschen Nutzer.
+   */
+  it('gibt keinen fremden Float zurueck', async () => {
+    const { service } = makeService();
+    await service.take({ amount: 500, mintUrl: MINT, events: [tokenEvent('ev-1', [1000])] });
+
+    const fremd = makeService({ pubkeyHex: ANDERER });
+    await expect(fremd.service.giveBack()).rejects.toThrow(/gehört/i);
+    expect(fremd.nostr.published).toEqual([]);
+
+    // Und er bleibt liegen, damit der richtige Nutzer ihn noch bekommt.
+    const db = await openDatabase();
+    await expect(db.get('floatState', 'current')).resolves.toBeDefined();
+  });
+
+  it('laesst den eigenen Float zurueckgeben', async () => {
+    const { service } = makeService();
+    await service.take({ amount: 500, mintUrl: MINT, events: [tokenEvent('ev-1', [1000])] });
+    await expect(service.giveBack()).resolves.toBeDefined();
+  });
+});
