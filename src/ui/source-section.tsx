@@ -54,6 +54,20 @@ export interface SourceSectionProps {
   /** SFR-13: Die Wallet noch einmal von den Relays holen. */
   onReloadWallet?: () => void;
   walletBusy?: boolean;
+  /**
+   * Was beim Lesen der NIP-60-Wallet tatsächlich herauskam.
+   *
+   * Steht nur da, wenn die Quelle gesperrt ist. Ohne diese Zeilen bleibt „Nicht
+   * wählbar" eine Behauptung: Der Nutzer sieht nicht, ob das Event fehlte, ob
+   * es unlesbar war, ob es keine Mints nennt oder ob schlicht kein Guthaben da
+   * ist — und kann deshalb nichts dagegen tun.
+   */
+  nip60Diagnose?: {
+    walletStatus: 'gefunden' | 'keine' | 'unlesbar';
+    walletMints: string[];
+    tokenEvents: number;
+    unreadableEvents: number;
+  };
   nip60BalanceByMint: Record<string, number>;
   localBalanceByMint: Record<string, number>;
   storageMode?: string;
@@ -105,6 +119,7 @@ export function SourceSection({
   walletRelays,
   onReloadWallet,
   walletBusy,
+  nip60Diagnose,
   nip60BalanceByMint,
   localBalanceByMint,
   storageMode,
@@ -179,6 +194,38 @@ export function SourceSection({
           <p class="fail" style={{ fontSize: '15px', marginTop: '12px' }}>
             {REASON_TEXT[state.reason]}
           </p>
+        )}
+
+        {nip60 && !state.available && nip60Diagnose && (
+          <dl class="diagnose">
+            <div class="dialog-detail">
+              <dt>kind:17375</dt>
+              <dd>
+                {nip60Diagnose.walletStatus === 'gefunden'
+                  ? 'gelesen'
+                  : nip60Diagnose.walletStatus === 'unlesbar'
+                    ? 'gefunden, nicht entschlüsselbar'
+                    : 'nicht gefunden'}
+              </dd>
+            </div>
+            <div class="dialog-detail">
+              <dt>Mints im Wallet-Event</dt>
+              <dd>
+                {nip60Diagnose.walletMints.length === 0
+                  ? 'keine genannt'
+                  : nip60Diagnose.walletMints.map((mint) => mint.replace(/^https:\/\//, '')).join(' · ')}
+              </dd>
+            </div>
+            <div class="dialog-detail">
+              <dt>kind:7375 gelesen</dt>
+              <dd>
+                {nip60Diagnose.tokenEvents}
+                {nip60Diagnose.unreadableEvents > 0
+                  ? ` · ${nip60Diagnose.unreadableEvents} unlesbar`
+                  : ''}
+              </dd>
+            </div>
+          </dl>
         )}
 
         <MintList

@@ -305,3 +305,11 @@ h1, h2, h3, h4 { font-family: var(--font-heading); font-weight: 600; margin: 0; 
 
 /* Identitaet im Mastkopf: npub, Wallet neu laden, Abmelden. */
 .identity { display: inline-flex; align-items: baseline; gap: 10px; }
+
+/* Was beim Lesen der NIP-60-Wallet herauskam — nur bei gesperrter Quelle. */
+.diagnose {
+  display: grid; grid-template-columns: 190px minmax(0, 1fr); gap: 4px 16px;
+  margin: 12px 0 0; font-size: 14px;
+  color: color-mix(in srgb, var(--color-text) 65%, transparent);
+}
+.diagnose dd { margin: 0; }

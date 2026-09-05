@@ -105,10 +105,20 @@ function build(
 export function evaluateSources(input: SourceInput): SourceEvaluation {
   const nichtAngemeldet = input.loggedIn ? undefined : ('nicht-angemeldet' as const);
 
-  // SFR-30: NIP-60 schneidet zusaetzlich mit den Mints aus kind:17375.
-  const nip60Mints = input.walletEvent
-    ? intersect(input.recipientMints, [...input.allowedMints], input.walletEvent.mints)
-    : [];
+  /*
+   * SFR-30: NIP-60 schneidet zusaetzlich mit den Mints aus kind:17375 — aber
+   * nur, wenn das Event welche nennt.
+   *
+   * Eine leere Liste ist keine Angabe, kein Verbot. Sie als leere Schnittmenge
+   * zu lesen machte eine funktionierende Wallet unbrauchbar, obwohl die Proofs
+   * in den kind:7375 ihren Mint selbst nennen — und der ist die Tatsache, die
+   * zaehlt. Nennt das Event Mints, bindet es wie bisher.
+   */
+  const nip60Mints = !input.walletEvent
+    ? []
+    : input.walletEvent.mints.length > 0
+      ? intersect(input.recipientMints, [...input.allowedMints], input.walletEvent.mints)
+      : intersect(input.recipientMints, [...input.allowedMints]);
   const localMints = intersect(input.recipientMints, [...input.allowedMints]);
 
   const nip60Blocker =

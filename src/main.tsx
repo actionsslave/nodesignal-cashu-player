@@ -682,6 +682,16 @@ function App() {
           walletRelays={walletRelays}
           onReloadWallet={signer.nip44 && session ? () => void readWallet() : undefined}
           walletBusy={walletBusy}
+          nip60Diagnose={
+            session && nip60
+              ? {
+                  walletStatus: nip60.walletStatus,
+                  walletMints: nip60.wallet?.mints ?? [],
+                  tokenEvents: nip60.tokenEvents.length,
+                  unreadableEvents: nip60.unreadableEvents,
+                }
+              : undefined
+          }
           nip60BalanceByMint={nip60?.balanceByMint ?? {}}
           localBalanceByMint={localBalance}
           storageMode={storageMode}
